@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#070b18" />
+  <title>VOLLEYVERSE — Rise. Compete. Become a Legend.</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="hud">
+      <div class="brand">VOLLEYVERSE</div>
+      <div class="scoreboard">
+        <div><span class="team-name">VERSE</span><strong id="homeScore">0</strong></div>
+        <div class="sets">SET <span id="setNumber">1</span> · <span id="setStatus">25</span></div>
+        <div><strong id="awayScore">0</strong><span class="team-name">RIVALS</span></div>
+      </div>
+      <button id="pauseBtn" class="glass">Ⅱ</button>
+    </div>
+
+    <div id="tip">TAP SERVE TO START THE RALLY</div>
+    <div id="canvasWrap"></div>
+
+    <div id="controls">
+      <div id="joystick" class="joystick"><div id="stick"></div></div>
+      <div class="action-grid">
+        <button class="action" id="passBtn">PASS</button>
+        <button class="action" id="setBtn">SET</button>
+        <button class="action spike" id="spikeBtn">SPIKE</button>
+        <button class="action" id="blockBtn">BLOCK</button>
+        <button class="action" id="diveBtn">DIVE</button>
+        <button class="action serve" id="serveBtn">SERVE</button>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden">
+      <div class="panel">
+        <div class="eyebrow">VOLLEYVERSE</div>
+        <h1 id="overlayTitle">READY?</h1>
+        <p id="overlayText">Your first playable 3D match prototype.</p>
+        <button id="playBtn" class="primary">PLAY MATCH</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
