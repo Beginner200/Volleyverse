@@ -1,0 +1,49 @@
+const $ = id => document.getElementById(id);
+const mainMenu = $('mainMenu');
+const modeMenu = $('modeMenu');
+const infoModal = $('infoModal');
+const gameUI = [...document.querySelectorAll('.game-ui')];
+
+function showGame(){
+  mainMenu.classList.add('hidden');
+  modeMenu.classList.add('hidden');
+  infoModal.classList.add('hidden');
+  gameUI.forEach(el => el.classList.remove('hidden'));
+  window.scrollTo(0,0);
+}
+function showInfo(title,text){
+  $('modalTitle').textContent=title;
+  $('modalText').textContent=text;
+  infoModal.classList.remove('hidden');
+}
+
+document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',()=>{
+  const a=btn.dataset.action;
+  if(a==='play'){
+    mainMenu.classList.add('hidden');
+    modeMenu.classList.remove('hidden');
+  }else if(a==='training'){
+    mainMenu.classList.add('hidden');
+    modeMenu.classList.remove('hidden');
+    document.querySelector('[data-mode="training"]').classList.add('selected');
+  }else if(a==='career') showInfo('CAREER MODE','Progress from Rookie to Pro, Elite and World Champion. Tournaments, training and unlockable content will be connected to the full progression system in a later phase.');
+  else if(a==='ranked') showInfo('RANKED ONLINE','Climb Bronze, Silver, Gold, Platinum, Diamond, Master, Grandmaster and Champion. Online matchmaking and global leaderboards are planned for the multiplayer phase.');
+  else if(a==='characters') showInfo('CHARACTERS','Build a roster of setters, outside hitters, opposites, middle blockers and liberos. Character stats, rarity and progression are coming next.');
+  else if(a==='customize') showInfo('CUSTOMIZE','Design your team identity with uniforms, numbers, shoes, accessories and court cosmetics.');
+  else if(a==='clubs') showInfo('CLUBS','Create or join a club, play with friends and compete for the global leaderboard. Online club features are planned for the multiplayer phase.');
+}));
+
+$('backToMenu').addEventListener('click',()=>{modeMenu.classList.add('hidden');mainMenu.classList.remove('hidden')});
+$('closeModal').addEventListener('click',()=>infoModal.classList.add('hidden'));
+$('modalPlay').addEventListener('click',()=>infoModal.classList.add('hidden'));
+$('settingsBtn').addEventListener('click',()=>showInfo('SETTINGS','Gameplay, audio, graphics quality and control customization will be added as the game systems expand.'));
+
+document.querySelectorAll('[data-mode]').forEach(card=>card.addEventListener('click',()=>{
+  if(card.classList.contains('locked')) return;
+  const mode=card.dataset.mode;
+  if(mode==='training') showInfo('TRAINING','Training mode is being prepared. For now, the playable 3D court prototype launches from Real Match.');
+  else showGame();
+}));
+
+// Hide gameplay UI until the player enters a match.
+gameUI.forEach(el=>el.classList.add('hidden'));
