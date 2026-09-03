@@ -1,61 +1,23 @@
 const roster = [
-  {id:'astra',name:'Astra',gender:'F',position:'OH',rarity:'Epic',ovr:88,stats:{serve:88,receive:86,set:72,spike:92,block:78,speed:87,jump:94,stamina:86,reaction:90},style:'Power wing attacker',color:0x37d9ff},
-  {id:'kairo',name:'Kairo',gender:'M',position:'S',rarity:'Legendary',ovr:91,stats:{serve:82,receive:88,set:97,spike:70,block:76,speed:91,jump:79,stamina:90,reaction:96},style:'Precision playmaker',color:0x37d9ff},
-  {id:'nova',name:'Nova',gender:'F',position:'OPP',rarity:'Rare',ovr:84,stats:{serve:85,receive:70,set:64,spike:94,block:82,speed:79,jump:91,stamina:84,reaction:83},style:'High-impact opposite',color:0x2367ff},
-  {id:'rex',name:'Rex',gender:'M',position:'MB',rarity:'Epic',ovr:87,stats:{serve:74,receive:68,set:61,spike:86,block:96,speed:72,jump:93,stamina:88,reaction:89},style:'Iron Wall blocker',color:0x2367ff},
-  {id:'mira',name:'Mira',gender:'F',position:'MB',rarity:'Uncommon',ovr:80,stats:{serve:72,receive:75,set:62,spike:82,block:88,speed:77,jump:89,stamina:86,reaction:82},style:'Quick middle',color:0x2367ff},
-  {id:'zen',name:'Zen',gender:'M',position:'L',rarity:'Rare',ovr:85,stats:{serve:62,receive:97,set:84,spike:45,block:48,speed:94,jump:66,stamina:95,reaction:98},style:'Elite libero defender',color:0x2367ff},
-  {id:'luna',name:'Luna',gender:'F',position:'OH',rarity:'Legendary',ovr:92,stats:{serve:94,receive:91,set:74,spike:95,block:84,speed:92,jump:96,stamina:90,reaction:94},style:'Complete ace',color:0x7d5cff},
-  {id:'orion',name:'Orion',gender:'M',position:'OPP',rarity:'Mythic',ovr:94,stats:{serve:96,receive:74,set:65,spike:99,block:90,speed:86,jump:98,stamina:93,reaction:92},style:'Dominant finisher',color:0xffb52e},
-  {id:'sora',name:'Sora',gender:'F',position:'MB',rarity:'Rare',ovr:83,stats:{serve:70,receive:69,set:58,spike:84,block:92,speed:75,jump:95,stamina:82,reaction:87},style:'Read-and-react blocker',color:0xff8847},
-  {id:'vex',name:'Vex',gender:'M',position:'OH',rarity:'Uncommon',ovr:79,stats:{serve:81,receive:79,set:66,spike:84,block:70,speed:84,jump:88,stamina:81,reaction:80},style:'Fast transition attacker',color:0xff4f79},
-  {id:'kai',name:'Kai',gender:'M',position:'S',rarity:'Common',ovr:74,stats:{serve:69,receive:76,set:83,spike:58,block:62,speed:78,jump:70,stamina:80,reaction:82},style:'Balanced setter',color:0xff8847},
-  {id:'axel',name:'Axel',gender:'M',position:'L',rarity:'Common',ovr:72,stats:{serve:55,receive:84,set:70,spike:40,block:42,speed:88,jump:61,stamina:86,reaction:89},style:'Reliable defender',color:0xff8847}
+{id:'astra',name:'Astra',gender:'F',position:'OH',rarity:'Epic',ovr:88,stats:{serve:88,receive:86,set:72,spike:92,block:78,speed:87,jump:94,stamina:86,reaction:90},style:'Power wing attacker',color:0x37d9ff},
+{id:'kairo',name:'Kairo',gender:'M',position:'S',rarity:'Legendary',ovr:91,stats:{serve:82,receive:88,set:97,spike:70,block:76,speed:91,jump:79,stamina:90,reaction:96},style:'Precision playmaker',color:0x37d9ff},
+{id:'nova',name:'Nova',gender:'F',position:'OPP',rarity:'Rare',ovr:84,stats:{serve:85,receive:70,set:64,spike:94,block:82,speed:79,jump:91,stamina:84,reaction:83},style:'High-impact opposite',color:0x2367ff},
+{id:'rex',name:'Rex',gender:'M',position:'MB',rarity:'Epic',ovr:87,stats:{serve:74,receive:68,set:61,spike:86,block:96,speed:72,jump:93,stamina:88,reaction:89},style:'Iron Wall blocker',color:0x2367ff},
+{id:'mira',name:'Mira',gender:'F',position:'MB',rarity:'Uncommon',ovr:80,stats:{serve:72,receive:75,set:62,spike:82,block:88,speed:77,jump:89,stamina:86,reaction:82},style:'Quick middle',color:0x2367ff},
+{id:'zen',name:'Zen',gender:'M',position:'L',rarity:'Rare',ovr:85,stats:{serve:62,receive:97,set:84,spike:45,block:48,speed:94,jump:66,stamina:95,reaction:98},style:'Elite libero defender',color:0x2367ff},
+{id:'luna',name:'Luna',gender:'F',position:'OH',rarity:'Legendary',ovr:92,stats:{serve:94,receive:91,set:74,spike:95,block:84,speed:92,jump:96,stamina:90,reaction:94},style:'Complete ace',color:0x7d5cff},
+{id:'orion',name:'Orion',gender:'M',position:'OPP',rarity:'Mythic',ovr:94,stats:{serve:96,receive:74,set:65,spike:99,block:90,speed:86,jump:98,stamina:93,reaction:92},style:'Dominant finisher',color:0xffb52e},
+{id:'sora',name:'Sora',gender:'F',position:'MB',rarity:'Rare',ovr:83,stats:{serve:70,receive:69,set:58,spike:84,block:92,speed:75,jump:95,stamina:82,reaction:87},style:'Read-and-react blocker',color:0xff8847},
+{id:'vex',name:'Vex',gender:'M',position:'OH',rarity:'Uncommon',ovr:79,stats:{serve:81,receive:79,set:66,spike:84,block:70,speed:84,jump:88,stamina:81,reaction:80},style:'Fast transition attacker',color:0xff4f79},
+{id:'kai',name:'Kai',gender:'M',position:'S',rarity:'Common',ovr:74,stats:{serve:69,receive:76,set:83,spike:58,block:62,speed:78,jump:70,stamina:80,reaction:82},style:'Balanced setter',color:0xff8847},
+{id:'axel',name:'Axel',gender:'M',position:'L',rarity:'Common',ovr:72,stats:{serve:55,receive:84,set:70,spike:40,block:42,speed:88,jump:61,stamina:86,reaction:89},style:'Reliable defender',color:0xff8847}
 ];
-
-const positions = {S:'SETTER',OH:'OUTSIDE HITTER',OPP:'OPPOSITE',MB:'MIDDLE BLOCKER',L:'LIBERO'};
-const rarityClass = r => r.toLowerCase();
-const selectedRoster = () => JSON.parse(localStorage.getItem('volleyverseRoster') || 'null');
-const saveRoster = ids => localStorage.setItem('volleyverseRoster', JSON.stringify(ids));
-
-function openCharacterSelect(returnTo='mode') {
-  document.getElementById('mainMenu').classList.add('hidden');
-  document.getElementById('modeMenu').classList.add('hidden');
-  document.getElementById('characterMenu').classList.remove('hidden');
-  window.dispatchEvent(new CustomEvent('vv:character-open',{detail:{returnTo}}));
-}
-
-window.VVCharacters = { roster, positions, selectedRoster, saveRoster, openCharacterSelect };
-
-function initCharacterUI(){
-  const grid=document.getElementById('characterGrid'); if(!grid) return;
-  const teamStrip=document.getElementById('teamStrip'); const count=document.getElementById('teamCount');
-  let chosen=selectedRoster() || ['astra','kairo','nova','rex','mira','zen'];
-  const render=()=>{
-    grid.innerHTML=roster.map(c=>`<button class="char-card ${rarityClass(c.rarity)} ${chosen.includes(c.id)?'chosen':''}" data-char="${c.id}">
-      <div class="char-top"><span class="rarity">${c.rarity}</span><strong>${c.ovr}</strong></div>
-      <div class="char-avatar" style="--accent:#${c.color.toString(16).padStart(6,'0')}"><span>${c.name.slice(0,1)}</span></div>
-      <b>${c.name}</b><span class="char-position">${c.position} • ${positions[c.position]}</span><small>${c.style}</small>
-    </button>`).join('');
-    grid.querySelectorAll('.char-card').forEach(card=>card.addEventListener('click',()=>{
-      const id=card.dataset.char;
-      if(chosen.includes(id)) { if(chosen.length>1) chosen=chosen.filter(x=>x!==id); }
-      else if(chosen.length<6) chosen.push(id);
-      else { document.getElementById('characterHint').textContent='TEAM FULL • REMOVE A PLAYER TO ADD ANOTHER'; return; }
-      document.getElementById('characterHint').textContent='SELECT 6 PLAYERS • 1 S + 2 OH/OPP + 2 MB + 1 L RECOMMENDED';
-      render(); renderTeam();
-    }));
-  };
-  const renderTeam=()=>{
-    teamStrip.innerHTML=chosen.map((id,i)=>{const c=roster.find(x=>x.id===id);return `<div class="team-slot"><span>${i+1}</span><b>${c.name}</b><small>${c.position}</small><button data-remove="${id}">×</button></div>`}).join('');
-    count.textContent=`${chosen.length}/6`;
-    teamStrip.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();if(chosen.length>1){chosen=chosen.filter(x=>x!==b.dataset.remove);render();renderTeam();}}));
-    document.getElementById('confirmTeam').disabled=chosen.length!==6;
-  };
-  document.getElementById('characterBack').addEventListener('click',()=>{
-    document.getElementById('characterMenu').classList.add('hidden'); document.getElementById('mainMenu').classList.remove('hidden');
-  });
-  document.getElementById('confirmTeam').addEventListener('click',()=>{if(chosen.length!==6)return;saveRoster(chosen);document.getElementById('characterMenu').classList.add('hidden');document.getElementById('modeMenu').classList.remove('hidden');});
-  render();renderTeam();
-}
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initCharacterUI); else initCharacterUI();
+const positions={S:'SETTER',OH:'OUTSIDE HITTER',OPP:'OPPOSITE',MB:'MIDDLE BLOCKER',L:'LIBERO'};
+const rarityClass=r=>r.toLowerCase(); const selectedRoster=()=>JSON.parse(localStorage.getItem('volleyverseRoster')||'null'); const saveRoster=ids=>localStorage.setItem('volleyverseRoster',JSON.stringify(ids));
+function openCharacterSelect(returnTo='mode'){document.getElementById('mainMenu').classList.add('hidden');document.getElementById('modeMenu').classList.add('hidden');document.getElementById('characterMenu').classList.remove('hidden');window.dispatchEvent(new CustomEvent('vv:character-open',{detail:{returnTo}}))}
+window.VVCharacters={roster,positions,selectedRoster,saveRoster,openCharacterSelect};
+function initCharacterUI(){const grid=document.getElementById('characterGrid');if(!grid)return;const teamStrip=document.getElementById('teamStrip');const count=document.getElementById('teamCount');let chosen=selectedRoster()||['astra','kairo','nova','rex','mira','zen'];
+const render=()=>{grid.innerHTML=roster.map(c=>`<button class="char-card ${rarityClass(c.rarity)} ${chosen.includes(c.id)?'chosen':''}" data-char="${c.id}"><div class="char-top"><span class="rarity">${c.rarity}</span><strong>${c.ovr}</strong></div><div class="char-avatar" style="--accent:#${c.color.toString(16).padStart(6,'0')}"><span>${c.name.slice(0,1)}</span></div><b>${c.name}</b><span class="char-position">${c.position} • ${positions[c.position]}</span><small>${c.style}</small><div class="mini-stats"><span>SPIKE <b>${c.stats.spike}</b></span><span>SET <b>${c.stats.set}</b></span><span>RECV <b>${c.stats.receive}</b></span><span>BLOCK <b>${c.stats.block}</b></span></div></button>`).join('');grid.querySelectorAll('.char-card').forEach(card=>card.addEventListener('click',()=>{const id=card.dataset.char;if(chosen.includes(id)){if(chosen.length>1)chosen=chosen.filter(x=>x!==id)}else if(chosen.length<6)chosen.push(id);else{document.getElementById('characterHint').textContent='TEAM FULL • REMOVE A PLAYER TO ADD ANOTHER';return}document.getElementById('characterHint').textContent='SELECT 6 PLAYERS • 1 S + 2 OH/OPP + 2 MB + 1 L RECOMMENDED';render();renderTeam()}))};
+const renderTeam=()=>{teamStrip.innerHTML=chosen.map((id,i)=>{const c=roster.find(x=>x.id===id);return `<div class="team-slot"><span>${i+1}</span><b>${c.name}</b><small>${c.position} • OVR ${c.ovr}</small><button data-remove="${id}">×</button></div>`}).join('');count.textContent=`${chosen.length}/6`;teamStrip.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();if(chosen.length>1){chosen=chosen.filter(x=>x!==b.dataset.remove);render();renderTeam()}}));document.getElementById('confirmTeam').disabled=chosen.length!==6};
+document.getElementById('characterBack').addEventListener('click',()=>{document.getElementById('characterMenu').classList.add('hidden');document.getElementById('mainMenu').classList.remove('hidden')});document.getElementById('confirmTeam').addEventListener('click',()=>{if(chosen.length!==6)return;saveRoster(chosen);document.getElementById('characterMenu').classList.add('hidden');document.getElementById('modeMenu').classList.remove('hidden')});render();renderTeam()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCharacterUI);else initCharacterUI();
