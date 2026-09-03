@@ -1,0 +1,10 @@
+{
+  "name": "VOLLEYVERSE",
+  "short_name": "VOLLEYVERSE",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#050814",
+  "theme_color": "#050814",
+  "orientation": "landscape",
+  "icons": []
+}
