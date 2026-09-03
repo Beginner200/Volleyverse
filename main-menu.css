@@ -1,35 +1,33 @@
-/* VOLLEYVERSE MAJESTIC MAIN MENU */
-#mainMenu{background:linear-gradient(180deg,#03152d 0%,#063d73 52%,#021326 100%);}
-#mainMenu:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 58%,rgba(39,211,255,.22),transparent 24%),radial-gradient(ellipse at 78% 20%,rgba(255,122,24,.18),transparent 24%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.3));}
-#mainMenu:after{content:"";position:absolute;left:-8%;right:-8%;bottom:-28%;height:72%;z-index:0;pointer-events:none;border-top:2px solid rgba(255,255,255,.5);background:linear-gradient(180deg,rgba(10,92,154,.28),rgba(1,19,39,.9));clip-path:polygon(0 22%,100% 0,100% 100%,0 100%);box-shadow:0 -20px 70px rgba(31,215,255,.12);}
+/* VOLLEYVERSE MAIN MENU */
+#mainMenu{background:linear-gradient(180deg,#03152d 0%,#063d73 52%,#021326 100%)}
+#mainMenu:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 58%,rgba(39,211,255,.22),transparent 24%),radial-gradient(ellipse at 78% 20%,rgba(255,122,24,.18),transparent 24%),linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.3))}
+#mainMenu:after{content:"";position:absolute;left:-8%;right:-8%;bottom:-28%;height:72%;z-index:0;pointer-events:none;border-top:2px solid rgba(255,255,255,.5);background:linear-gradient(180deg,rgba(10,92,154,.28),rgba(1,19,39,.9));clip-path:polygon(0 22%,100% 0,100% 100%,0 100%);box-shadow:0 -20px 70px rgba(31,215,255,.12)}
 #mainMenu .menu-glow{z-index:1;opacity:.7;filter:blur(48px)}
 #mainMenu .menu-top,#mainMenu .menu-content,#mainMenu .menu-footer{z-index:5}
-/* cinematic stadium atmosphere */
 #mainMenu .hero-copy{position:relative;min-width:0}
 #mainMenu .hero-copy:before{content:"";position:absolute;width:170px;height:170px;left:20%;top:5%;border-radius:50%;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 80px rgba(31,215,255,.13);transform:translate(-50%,-50%);pointer-events:none}
 #mainMenu .hero-copy h1{font-size:clamp(50px,8vw,94px);letter-spacing:-.055em;text-shadow:0 12px 45px rgba(0,0,0,.4)}
 #mainMenu .hero-copy p{color:#d0e2ef;text-shadow:0 2px 12px rgba(0,0,0,.3)}
-/* replace text-heavy Play CTA with a floating circular play control */
-#mainMenu .menu-btn.featured{width:148px;height:148px;min-height:148px;margin:0 auto 4px;border-radius:50%;padding:0;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 35% 28%,rgba(108,232,255,.32),rgba(4,65,112,.88) 52%,rgba(2,22,43,.96) 100%);border:2px solid rgba(191,241,255,.62);box-shadow:0 0 0 8px rgba(31,215,255,.06),0 0 55px rgba(31,215,255,.24),inset 0 0 35px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s,box-shadow .2s}
-#mainMenu .menu-btn.featured:before{content:"";position:absolute;width:92px;height:92px;border:1px solid rgba(255,255,255,.18);border-radius:50%;}
-#mainMenu .menu-btn.featured:after{content:"";position:absolute;width:240px;height:240px;border:1px solid rgba(255,255,255,.07);border-radius:50%;}
+/* Main PLAY control becomes a clean volleyball-style play symbol */
+#mainMenu .menu-btn.featured{width:148px;height:148px;min-height:148px;margin:0 auto 4px;border-radius:50%;padding:0;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,rgba(108,232,255,.32),rgba(4,65,112,.88) 52%,rgba(2,22,43,.96));border:2px solid rgba(191,241,255,.62);box-shadow:0 0 0 8px rgba(31,215,255,.06),0 0 55px rgba(31,215,255,.24),inset 0 0 35px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s,box-shadow .2s}
+#mainMenu .menu-btn.featured:before{content:"";position:absolute;width:92px;height:92px;border:1px solid rgba(255,255,255,.18);border-radius:50%}
+#mainMenu .menu-btn.featured:after{content:"";position:absolute;width:240px;height:240px;border:1px solid rgba(255,255,255,.07);border-radius:50%}
 #mainMenu .menu-btn.featured strong{font-size:0;width:0;height:0;border-top:17px solid transparent;border-bottom:17px solid transparent;border-left:28px solid #fff;margin-left:7px;filter:drop-shadow(0 3px 9px rgba(0,0,0,.35));z-index:2}
-#mainMenu .menu-btn.featured span{display:none}
-#mainMenu .menu-btn.featured i{display:none}
+#mainMenu .menu-btn.featured span,#mainMenu .menu-btn.featured i{display:none}
 #mainMenu .menu-btn.featured:hover{transform:scale(1.045);border-color:#fff;box-shadow:0 0 0 10px rgba(31,215,255,.07),0 0 75px rgba(31,215,255,.38),inset 0 0 40px rgba(255,255,255,.1)}
-/* compact icon-style secondary controls */
-#mainMenu .menu-grid{gap:8px;max-width:430px;margin:auto}
-#mainMenu .menu-grid .menu-btn{min-height:58px;padding:9px 12px 9px 44px;border-radius:15px;background:rgba(2,29,56,.58);backdrop-filter:blur(9px);border-color:rgba(175,229,255,.18);box-shadow:0 8px 28px rgba(0,0,0,.2)}
-#mainMenu .menu-grid .menu-btn:before{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:21px;height:21px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.25);border-radius:50%;font-size:10px;color:#fff;background:rgba(255,255,255,.06)}
-#mainMenu .menu-grid .menu-btn:nth-child(1):before{content:"★"}
-#mainMenu .menu-grid .menu-btn:nth-child(2):before{content:"◆"}
-#mainMenu .menu-grid .menu-btn:nth-child(3):before{content:"⌁"}
-#mainMenu .menu-grid .menu-btn:nth-child(4):before{content:"●"}
+/* Secondary controls are icon-only: no words inside the buttons */
+#mainMenu .menu-grid{gap:10px;max-width:430px;margin:auto;grid-template-columns:repeat(3,minmax(0,1fr))}
+#mainMenu .menu-grid .menu-btn{min-height:78px;padding:10px;border-radius:18px;background:rgba(2,29,56,.58);backdrop-filter:blur(9px);border-color:rgba(175,229,255,.18);box-shadow:0 8px 28px rgba(0,0,0,.2);display:grid;place-items:center;position:relative}
+#mainMenu .menu-grid .menu-btn:before{position:static;transform:none;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3);border-radius:14px;font-size:23px;line-height:1;color:#fff;background:rgba(255,255,255,.07);box-shadow:inset 0 0 18px rgba(31,215,255,.08);transition:transform .18s,border-color .18s,background .18s}
+#mainMenu .menu-grid .menu-btn:nth-child(1):before{content:"🏆"}
+#mainMenu .menu-grid .menu-btn:nth-child(2):before{content:"⚡"}
+#mainMenu .menu-grid .menu-btn:nth-child(3):before{content:"🎯"}
+#mainMenu .menu-grid .menu-btn:nth-child(4):before{content:"👤"}
 #mainMenu .menu-grid .menu-btn:nth-child(5):before{content:"✦"}
-#mainMenu .menu-grid .menu-btn:nth-child(6):before{content:"♜"}
-#mainMenu .menu-grid .menu-btn strong{font-size:9px;letter-spacing:.14em}
-#mainMenu .menu-grid .menu-btn span{font-size:7px;color:#a9c2d5}
-/* volleyball-inspired floating court markings */
+#mainMenu .menu-grid .menu-btn:nth-child(6):before{content:"♟"}
+#mainMenu .menu-grid .menu-btn strong,#mainMenu .menu-grid .menu-btn span{display:none}
+#mainMenu .menu-grid .menu-btn:hover:before,#mainMenu .menu-grid .menu-btn:focus-visible:before{transform:scale(1.1);border-color:rgba(255,255,255,.72);background:rgba(31,215,255,.13)}
+#mainMenu .menu-grid .menu-btn:after{content:"";position:absolute;inset:auto 8px 6px;height:2px;background:rgba(255,255,255,.08);border-radius:99px}
 #mainMenu .menu-content:after{content:"";position:absolute;width:min(45vw,430px);height:min(45vw,430px);right:-4%;bottom:-24%;border:1px solid rgba(255,255,255,.13);border-radius:50%;box-shadow:0 0 0 38px rgba(255,255,255,.025),0 0 90px rgba(31,215,255,.1);pointer-events:none;z-index:-1}
-@media(max-width:760px){#mainMenu .menu-content{gap:10px}#mainMenu .menu-btn.featured{width:108px;height:108px;min-height:108px}#mainMenu .menu-btn.featured strong{border-top-width:13px;border-bottom-width:13px;border-left-width:21px}#mainMenu .menu-grid{width:min(92vw,430px)}#mainMenu .menu-grid .menu-btn{min-height:50px}}
-@media (orientation:landscape) and (max-height:600px){#mainMenu .menu-content{grid-template-columns:.9fr 1.1fr;gap:18px}#mainMenu .hero-copy h1{font-size:clamp(38px,7vw,68px)}#mainMenu .menu-btn.featured{width:102px;height:102px;min-height:102px}#mainMenu .menu-btn.featured strong{border-top-width:12px;border-bottom-width:12px;border-left-width:20px}#mainMenu .menu-grid .menu-btn{min-height:42px;padding:7px 8px 7px 38px}#mainMenu .menu-grid .menu-btn:before{left:10px;width:18px;height:18px;font-size:8px}}
+@media(max-width:760px){#mainMenu .menu-content{gap:10px}#mainMenu .menu-btn.featured{width:108px;height:108px;min-height:108px}#mainMenu .menu-btn.featured strong{border-top-width:13px;border-bottom-width:13px;border-left-width:21px}#mainMenu .menu-grid{width:min(92vw,430px)}#mainMenu .menu-grid .menu-btn{min-height:64px}}
+@media (orientation:landscape) and (max-height:600px){#mainMenu .menu-content{grid-template-columns:.9fr 1.1fr;gap:18px}#mainMenu .hero-copy h1{font-size:clamp(38px,7vw,68px)}#mainMenu .menu-btn.featured{width:102px;height:102px;min-height:102px}#mainMenu .menu-btn.featured strong{border-top-width:12px;border-bottom-width:12px;border-left-width:20px}#mainMenu .menu-grid{gap:7px}#mainMenu .menu-grid .menu-btn{min-height:52px;padding:6px}.menu-grid .menu-btn:before{width:34px;height:34px;font-size:18px}}
