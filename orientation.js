@@ -9,6 +9,9 @@
     if(!document.getElementById('mainMenuTheme')){
       const menuCss=document.createElement('link');menuCss.id='mainMenuTheme';menuCss.rel='stylesheet';menuCss.href='main-menu.css';document.head.appendChild(menuCss);
     }
+    if(!document.getElementById('volleyverseControls')){
+      const controlsCss=document.createElement('link');controlsCss.id='volleyverseControls';controlsCss.rel='stylesheet';controlsCss.href='controls.css';document.head.appendChild(controlsCss);
+    }
   };
   const hideOrientationNotice=()=>document.body.classList.remove('portrait-blocked');
   const lockLandscape=async()=>{
