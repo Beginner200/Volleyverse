@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 const $ = id => document.getElementById(id);
 const wrap = $('canvasWrap');
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x050914); scene.fog = new THREE.Fog(0x050914,22,48);
