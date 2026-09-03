@@ -12,3 +12,4 @@ document.querySelectorAll('[data-mode]').forEach(card=>card.addEventListener('cl
 function syncMenuProfile(){const s=window.VVCareer?.load?.();if(!s)return;const rank=window.VVCareer.rank(s.level);$('menuRank').textContent=rank;$('menuLevel').textContent='LEVEL '+s.level}
 syncMenuProfile();
 gameUI.forEach(el=>el.classList.add('hidden'));
+(()=>{const css=document.createElement('link');css.rel='stylesheet';css.href='economy.css';document.head.appendChild(css);const script=document.createElement('script');script.src='economy.js';document.body.appendChild(script)})();
