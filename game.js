@@ -1,167 +1,268 @@
 import * as THREE from 'three';
 
-const wrap = document.getElementById('canvasWrap');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x070b18);
-scene.fog = new THREE.Fog(0x070b18, 18, 42);
+const $ = id => document.getElementById(id);
+const wrap = $('canvasWrap');
 
-const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 100);
-camera.position.set(0, 7.8, 13.5);
+// VOLLEYVERSE — Phase 1 gameplay upgrade
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050914);
+scene.fog = new THREE.Fog(0x050914, 22, 48);
+
+const camera = new THREE.PerspectiveCamera(56, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 8.2, 14.5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 wrap.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xbfe8ff, 0x111522, 2.2));
-const key = new THREE.DirectionalLight(0xffffff, 3.1);
-key.position.set(4, 12, 7);
+scene.add(new THREE.HemisphereLight(0xbfe8ff, 0x0a1020, 2.15));
+const key = new THREE.DirectionalLight(0xffffff, 3.3);
+key.position.set(5, 13, 8);
 key.castShadow = true;
 key.shadow.mapSize.set(1024, 1024);
 scene.add(key);
-const rim = new THREE.PointLight(0x3d8cff, 25, 20);
-rim.position.set(-7, 6, -4);
+const rim = new THREE.PointLight(0x3d8cff, 22, 22);
+rim.position.set(-8, 7, -5);
 scene.add(rim);
 
+// Court
 const court = new THREE.Group();
 scene.add(court);
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x17527b, roughness: 0.72, metalness: 0.05 });
-const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.25, 10), floorMat);
-floor.position.y = -0.15; floor.receiveShadow = true; court.add(floor);
+const floor = new THREE.Mesh(new THREE.BoxGeometry(18, .22, 10), new THREE.MeshStandardMaterial({ color: 0x165a83, roughness: .66, metalness: .04 }));
+floor.position.y = -.14;
+floor.receiveShadow = true;
+court.add(floor);
 
-function line(x, z, w, d) {
-  const m = new THREE.MeshBasicMaterial({ color: 0xeaf8ff });
-  const o = new THREE.Mesh(new THREE.BoxGeometry(w, 0.025, d), m);
-  o.position.set(x, 0.02, z); court.add(o);
+function courtLine(x, z, w, d) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, .026, d), new THREE.MeshBasicMaterial({ color: 0xf2fbff }));
+  m.position.set(x, .012, z);
+  court.add(m);
 }
-line(0, -5, 18, .08); line(0, 5, 18, .08); line(-9, 0, .08, 10); line(9, 0, .08, 10);
-line(-3, 0, .055, 10); line(3, 0, .055, 10);
-line(0, -3, 18, .055); line(0, 3, 18, .055);
+courtLine(0, -5, 18, .08); courtLine(0, 5, 18, .08);
+courtLine(-9, 0, .08, 10); courtLine(9, 0, .08, 10);
+courtLine(0, -3, 18, .055); courtLine(0, 3, 18, .055); courtLine(0, 0, .055, 10);
 
+// Net
 const net = new THREE.Group();
-const poleMat = new THREE.MeshStandardMaterial({ color: 0xd8e7f5, metalness: .7, roughness: .3 });
+const poleMat = new THREE.MeshStandardMaterial({ color: 0xd9e7f4, metalness: .72, roughness: .25 });
 for (const x of [-4.65, 4.65]) {
-  const p = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.65, 12), poleMat);
-  p.position.set(x, 1.32, 0); p.castShadow = true; net.add(p);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.7, 12), poleMat);
+  pole.position.set(x, 1.35, 0); pole.castShadow = true; net.add(pole);
 }
-const netMesh = new THREE.Mesh(new THREE.BoxGeometry(9.3, 1.05, .045), new THREE.MeshBasicMaterial({ color: 0xdce8ef, transparent: true, opacity: .36, wireframe: true }));
+const netMesh = new THREE.Mesh(new THREE.BoxGeometry(9.3, 1.05, .045), new THREE.MeshBasicMaterial({ color: 0xe5edf5, transparent: true, opacity: .42, wireframe: true }));
 netMesh.position.y = 1.75; net.add(netMesh); scene.add(net);
 
-function createPlayer(color, name, x, z, home = true) {
+function createPlayer(color, name, x, z, home = true, position = 'OH') {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
-  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: .52 });
-  const skin = new THREE.MeshStandardMaterial({ color: 0xf1b08b, roughness: .7 });
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .72, 6, 12), bodyMat); torso.position.y = 1.05; torso.castShadow = true; g.add(torso);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(.27, 16, 12), skin); head.position.y = 1.83; head.castShadow = true; g.add(head);
-  const shorts = new THREE.Mesh(new THREE.BoxGeometry(.48, .3, .3), new THREE.MeshStandardMaterial({ color: 0x101728 })); shorts.position.y = .57; shorts.castShadow = true; g.add(shorts);
-  for (const sx of [-.14, .14]) { const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.075, .52, 5, 8), skin); leg.position.set(sx, .27, 0); leg.castShadow = true; g.add(leg); }
-  for (const sx of [-.42, .42]) { const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.07, .5, 5, 8), skin); arm.position.set(sx, 1.12, 0); arm.rotation.z = sx < 0 ? -.18 : .18; arm.castShadow = true; g.add(arm); }
-  g.userData = { name, home, speed: 4.2, baseX: x, baseZ: z, action: 0 };
+  const jersey = new THREE.MeshStandardMaterial({ color, roughness: .46 });
+  const skin = new THREE.MeshStandardMaterial({ color: 0xf0ae87, roughness: .7 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x111728, roughness: .65 });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.31, .72, 6, 12), jersey);
+  torso.position.y = 1.04; torso.castShadow = true; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.27, 16, 12), skin);
+  head.position.y = 1.82; head.castShadow = true; g.add(head);
+  const shorts = new THREE.Mesh(new THREE.BoxGeometry(.49, .3, .31), dark);
+  shorts.position.y = .57; shorts.castShadow = true; g.add(shorts);
+  const arms = [], legs = [];
+  for (const sx of [-.4, .4]) {
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.068, .5, 5, 8), skin);
+    arm.position.set(sx, 1.1, 0); arm.rotation.z = sx < 0 ? -.2 : .2; arm.castShadow = true; g.add(arm); arms.push(arm);
+  }
+  for (const sx of [-.14, .14]) {
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.075, .52, 5, 8), skin);
+    leg.position.set(sx, .27, 0); leg.castShadow = true; g.add(leg); legs.push(leg);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(.18, .1, .31), new THREE.MeshStandardMaterial({ color: home ? 0xeaf8ff : 0xffffff, roughness: .38 }));
+    shoe.position.set(sx, .055, home ? -.04 : .04); shoe.castShadow = true; g.add(shoe);
+  }
+  g.userData = { name, home, position, speed: 3.9, baseX: x, baseZ: z, arms, legs, action: 0, cooldown: 0 };
   scene.add(g); return g;
 }
 
 const homePlayers = [
-  createPlayer(0x3fdcff, 'Astra', -5.8, -3.4), createPlayer(0x3fdcff, 'Kairo', -2.2, -3.4), createPlayer(0x3fdcff, 'Nova', 2.2, -3.4),
-  createPlayer(0x2467ff, 'Rex', -5.8, -1.2), createPlayer(0x2467ff, 'Mira', -2.2, -1.2), createPlayer(0x2467ff, 'Zen', 2.2, -1.2)
+  createPlayer(0x37d9ff, 'Astra', -5.8, -3.45, true, 'OH'), createPlayer(0x37d9ff, 'Kairo', -2.2, -3.45, true, 'S'), createPlayer(0x37d9ff, 'Nova', 2.2, -3.45, true, 'OPP'),
+  createPlayer(0x2367ff, 'Rex', -5.8, -1.15, true, 'MB'), createPlayer(0x2367ff, 'Mira', -2.2, -1.15, true, 'MB'), createPlayer(0x2367ff, 'Zen', 2.2, -1.15, true, 'L')
 ];
 const awayPlayers = [
-  createPlayer(0xff527e, 'Vex', -5.8, 3.4, false), createPlayer(0xff527e, 'Luna', -2.2, 3.4, false), createPlayer(0xff527e, 'Orion', 2.2, 3.4, false),
-  createPlayer(0xff8b46c7, 'Kai', -5.8, 1.2, false), createPlayer(0xff8b46c7, 'Sora', -2.2, 1.2, false), createPlayer(0xff8b46c7, 'Axel', 2.2, 1.2, false)
+  createPlayer(0xff4f79, 'Vex', -5.8, 3.45, false, 'OH'), createPlayer(0xff4f79, 'Luna', -2.2, 3.45, false, 'S'), createPlayer(0xff4f79, 'Orion', 2.2, 3.45, false, 'OPP'),
+  createPlayer(0xff8847, 'Kai', -5.8, 1.15, false, 'MB'), createPlayer(0xff8847, 'Sora', -2.2, 1.15, false, 'MB'), createPlayer(0xff8847, 'Axel', 2.2, 1.15, false, 'L')
 ];
 
-const ball = new THREE.Mesh(new THREE.SphereGeometry(.19, 20, 14), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .32 }));
+// Ball physics
+const ball = new THREE.Mesh(new THREE.SphereGeometry(.19, 20, 14), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .28 }));
 ball.castShadow = true; scene.add(ball);
-const ballState = { v: new THREE.Vector3(), active: false, lastTouch: 'home', phase: 0 };
+const ballState = { v: new THREE.Vector3(), active: false, lastTouch: 'home', phase: 'serve', touches: 0, rallyTouches: 0, cooldown: 0 };
 
 let homeScore = 0, awayScore = 0, homeSets = 0, awaySets = 0, setNumber = 1;
 let controlled = homePlayers[2];
-let paused = false;
+let paused = false, rallyLocked = false;
 const keys = { x: 0, z: 0 };
 
-const $ = id => document.getElementById(id);
-const updateHUD = () => {
-  $('homeScore').textContent = homeScore; $('awayScore').textContent = awayScore;
+function updateHUD() {
+  $('homeScore').textContent = homeScore;
+  $('awayScore').textContent = awayScore;
   $('setNumber').textContent = setNumber;
   $('setStatus').textContent = setNumber === 5 ? '15' : '25';
-};
-
+}
+function setTip(text) { $('tip').textContent = text; }
+function resetPlayers() {
+  [...homePlayers, ...awayPlayers].forEach(p => {
+    p.position.x = p.userData.baseX; p.position.z = p.userData.baseZ; p.position.y = 0;
+    p.userData.action = 0; p.userData.cooldown = 0;
+  });
+}
+function resetBall() {
+  ballState.active = false; ballState.phase = 'serve'; ballState.touches = 0; ballState.rallyTouches = 0; ballState.cooldown = 0;
+  ball.position.set(controlled.position.x, 1.9, -4.25); ballState.v.set(0, 0, 0); rallyLocked = false;
+}
 function serve() {
-  if (ballState.active) return;
-  ball.position.set(controlled.position.x, 1.8, -4.25);
-  ballState.v.set((Math.random()-.5)*1.5, 5.5, 8.3);
-  ballState.active = true; ballState.lastTouch = 'home'; ballState.phase = 0;
-  $('tip').textContent = 'RALLY LIVE • MOVE AND PLAY THE BALL';
+  if (ballState.active || rallyLocked) return;
+  ball.position.set(controlled.position.x, 1.95, -4.15);
+  const direction = THREE.MathUtils.clamp(controlled.position.x * .06, -.65, .65);
+  ballState.v.set(direction, 5.8, 8.5); ballState.active = true; ballState.phase = 'serve'; ballState.lastTouch = 'home'; ballState.rallyTouches = 1;
+  setTip('SERVE IN PLAY • MOVE INTO POSITION'); controlled.userData.action = .45;
 }
-function action(type) {
-  if (!ballState.active) { serve(); return; }
-  const dx = ball.position.x - controlled.position.x;
-  const dz = ball.position.z - controlled.position.z;
-  if (Math.abs(dx) < 3 && Math.abs(dz) < 3.2) {
-    if (type === 'pass') ballState.v.set(dx * .3, 6.2, Math.abs(ballState.v.z) > 0 ? 5.2 : 4.5);
-    if (type === 'set') ballState.v.set(dx * .25, 7.2, 4.8);
-    if (type === 'spike') ballState.v.set(dx * .2, 5.0, 10.5);
-    if (type === 'block') ballState.v.y = 7.0;
-    if (type === 'dive') { controlled.position.z = Math.max(-4.6, controlled.position.z + .9); }
-    ballState.lastTouch = 'home';
-  }
+function playerNearBall(player, range = 2.15) {
+  const dx = ball.position.x - player.position.x, dz = ball.position.z - player.position.z;
+  return Math.hypot(dx, dz) < range && Math.abs(ball.position.y - 1.0) < 2.2;
 }
 
-['pass','set','spike','block','dive','serve'].forEach(type => $(type+'Btn').addEventListener('pointerdown', e => { e.preventDefault(); action(type); }));
-$('pauseBtn').addEventListener('pointerdown', () => { paused = !paused; $('pauseBtn').textContent = paused ? '▶' : 'Ⅱ'; $('tip').textContent = paused ? 'MATCH PAUSED' : 'RALLY LIVE • MOVE AND PLAY THE BALL'; });
-$('playBtn').addEventListener('pointerdown', () => $('overlay').classList.add('hidden'));
+function action(type) {
+  if (rallyLocked) return;
+  if (type === 'serve') { serve(); return; }
+  if (!ballState.active) { serve(); return; }
+  if (ballState.cooldown > 0) return;
+  const dx = ball.position.x - controlled.position.x;
+  const near = Math.hypot(dx, ball.position.z - controlled.position.z) < (type === 'dive' ? 2.65 : 2.25);
+  if (!near || ball.position.y < .25 || ball.position.y > 4.3) return;
+
+  if (type === 'pass') { ballState.v.set(dx * .18, 6.3, 4.8); ballState.phase = 'receive'; setTip('PASS • BUILD THE ATTACK'); }
+  else if (type === 'set') { ballState.v.set(dx * .12, 7.35, 4.2); ballState.phase = 'set'; setTip('SET • PREPARE THE SPIKE'); }
+  else if (type === 'spike') { ballState.v.set(dx * .15, 4.9, 10.9); ballState.phase = 'attack'; setTip('SPIKE • ATTACK THE OPPONENT'); }
+  else if (type === 'block') {
+    if (ball.position.z > -.8 && ball.position.y > 1.25) { ballState.v.set(dx * .2, 5.8, -Math.abs(ballState.v.z) * .9 || -6.5); ballState.phase = 'block'; setTip('BLOCK • CLOSE THE ANGLE'); } else return;
+  } else if (type === 'dive') {
+    controlled.position.z = THREE.MathUtils.clamp(controlled.position.z + .7, -4.65, -.3); ballState.v.set(dx * .28, 5.5, 4.2); ballState.phase = 'dig'; setTip('DIG • KEEP THE RALLY ALIVE');
+  }
+  controlled.userData.action = type === 'dive' ? .8 : .55;
+  ballState.lastTouch = 'home'; ballState.touches = Math.min(ballState.touches + 1, 3); ballState.rallyTouches++; ballState.cooldown = .25;
+}
+
+['pass','set','spike','block','dive','serve'].forEach(type => $(type + 'Btn').addEventListener('pointerdown', e => { e.preventDefault(); action(type); }));
+$('pauseBtn').addEventListener('pointerdown', () => { paused = !paused; $('pauseBtn').textContent = paused ? '▶' : 'Ⅱ'; setTip(paused ? 'MATCH PAUSED' : 'RALLY LIVE • MOVE AND PLAY THE BALL'); });
+$('playBtn').addEventListener('pointerdown', () => {
+  $('overlay').classList.add('hidden');
+  if ($('playBtn').textContent === 'PLAY AGAIN') {
+    homeScore = awayScore = homeSets = awaySets = 0; setNumber = 1; updateHUD(); resetPlayers(); resetBall();
+    $('overlayTitle').textContent = 'READY?'; $('overlayText').textContent = 'Serve, receive, set and attack your way to victory.'; $('playBtn').textContent = 'PLAY MATCH';
+  }
+});
 
 const joy = $('joystick'), stick = $('stick');
 function joyMove(e) {
-  const r = joy.getBoundingClientRect(), cx = r.left+r.width/2, cy = r.top+r.height/2;
-  let x = e.clientX-cx, y=e.clientY-cy; const max=r.width*.32; const len=Math.hypot(x,y);
-  if(len>max){x*=max/len;y*=max/len;} stick.style.transform=`translate(${x}px,${y}px)`; keys.x=x/max; keys.z=y/max;
+  const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let x = e.clientX - cx, y = e.clientY - cy; const max = r.width * .32, len = Math.hypot(x, y);
+  if (len > max) { x *= max / len; y *= max / len; }
+  stick.style.transform = `translate(${x}px,${y}px)`; keys.x = x / max; keys.z = y / max;
 }
-function joyEnd(){ stick.style.transform='translate(0,0)'; keys.x=keys.z=0; }
-joy.addEventListener('pointerdown', e=>{joy.setPointerCapture(e.pointerId);joyMove(e)});
-joy.addEventListener('pointermove', e=>{if(e.pressure||e.buttons)joyMove(e)});
+function joyEnd() { stick.style.transform = 'translate(0,0)'; keys.x = keys.z = 0; }
+joy.addEventListener('pointerdown', e => { joy.setPointerCapture(e.pointerId); joyMove(e); });
+joy.addEventListener('pointermove', e => { if (e.pressure || e.buttons) joyMove(e); });
 joy.addEventListener('pointerup', joyEnd); joy.addEventListener('pointercancel', joyEnd);
 
+// Opponent AI: formation movement plus receive/attack decisions.
+let aiSequence = 0;
+function aiUpdate(dt) {
+  const target = ballState.active ? ball.position.x : 0;
+  awayPlayers.forEach((p, i) => {
+    const roleTarget = i === 1 ? THREE.MathUtils.clamp(target, -6.8, 6.8) : p.userData.baseX + (target - p.userData.baseX) * .16;
+    p.position.x += THREE.MathUtils.clamp(roleTarget - p.position.x, -1, 1) * dt * (1.35 + i * .05);
+    const desiredZ = i < 3 ? 3.25 : 1.0;
+    p.position.z += ((ballState.active && ball.position.z > .15 ? ball.position.z : desiredZ) - p.position.z) * dt * .55;
+    p.position.x = THREE.MathUtils.clamp(p.position.x, -8.3, 8.3); p.position.z = THREE.MathUtils.clamp(p.position.z, .35, 4.65);
+    p.userData.cooldown = Math.max(0, p.userData.cooldown - dt);
+  });
+  if (!ballState.active || ball.position.z < .05 || ballState.cooldown > 0) return;
+  const receiver = awayPlayers.reduce((best, p) => Math.abs(p.position.x - ball.position.x) < Math.abs(best.position.x - ball.position.x) ? p : best, awayPlayers[0]);
+  if (playerNearBall(receiver, 2.0) && receiver.userData.cooldown <= 0 && ball.position.y < 2.9) {
+    const attack = ball.position.y > 1.8 && ball.position.z < 2.0 && aiSequence % 3 === 0;
+    if (attack) { ballState.v.set((Math.random() - .5) * 1.1, 5.0, -10.2); ballState.phase = 'attack'; setTip('OPPONENT ATTACK'); }
+    else { ballState.v.set((Math.random() - .5) * 1.4, 6.3, -4.5); ballState.phase = 'receive'; }
+    ballState.lastTouch = 'away'; ballState.rallyTouches++; receiver.userData.action = .5; receiver.userData.cooldown = .7; ballState.cooldown = .35; aiSequence++;
+  }
+}
+
 function point(winner) {
+  if (rallyLocked) return;
+  rallyLocked = true;
   if (winner === 'home') homeScore++; else awayScore++;
-  const target = setNumber === 5 ? 15 : 25;
-  const lead = Math.abs(homeScore-awayScore);
+  updateHUD();
+  const target = setNumber === 5 ? 15 : 25, lead = Math.abs(homeScore - awayScore);
   if ((homeScore >= target || awayScore >= target) && lead >= 2) {
     if (homeScore > awayScore) homeSets++; else awaySets++;
     if (homeSets >= 3 || awaySets >= 3) {
       $('overlayTitle').textContent = homeSets > awaySets ? 'VICTORY' : 'DEFEAT';
       $('overlayText').textContent = `Match complete • ${homeSets}–${awaySets} sets`;
-      $('playBtn').textContent = 'PLAY AGAIN';
-      $('overlay').classList.remove('hidden');
-      homeScore=awayScore=0; homeSets=awaySets=0; setNumber=1;
-    } else { setNumber++; homeScore=awayScore=0; }
+      $('playBtn').textContent = 'PLAY AGAIN'; $('overlay').classList.remove('hidden');
+      homeScore = awayScore = homeSets = awaySets = 0; setNumber = 1;
+    } else {
+      setNumber++; homeScore = awayScore = 0; setTip(`SET ${setNumber} • FIRST TO ${setNumber === 5 ? 15 : 25}`);
+    }
+  } else setTip(`${winner === 'home' ? 'POINT VOLLEYVERSE' : 'OPPONENT POINT'} • TAP SERVE`);
+  resetPlayers(); setTimeout(resetBall, 650);
+}
+
+function checkBall(dt) {
+  ballState.v.y -= 9.8 * dt;
+  ball.position.addScaledVector(ballState.v, dt);
+  ballState.cooldown = Math.max(0, ballState.cooldown - dt);
+  if (ball.position.y < .18) { point(ball.position.z < 0 ? 'away' : 'home'); return; }
+  if (Math.abs(ball.position.x) > 9.05 || Math.abs(ball.position.z) > 5.05) { point(ball.position.z < 0 ? 'away' : 'home'); return; }
+  if (Math.abs(ball.position.z) < .12 && ball.position.y < 1.78) {
+    if (Math.abs(ballState.v.z) > .4) ballState.v.z *= -.72;
+    ball.position.z = ball.position.z < 0 ? -.14 : .14;
   }
-  updateHUD(); ballState.active=false; ball.position.set(0,2,-4); $('tip').textContent='TAP SERVE TO START THE RALLY';
+  ballState.v.multiplyScalar(Math.pow(.998, dt * 60));
+  if (ballState.v.length() > 15) ballState.v.setLength(15);
+}
+
+function animatePlayer(p, dt, time) {
+  const u = p.userData;
+  u.action = Math.max(0, u.action - dt * 1.8);
+  const moving = p === controlled && Math.abs(keys.x) + Math.abs(keys.z) > .08;
+  const stride = moving ? Math.sin(time * 12) * .35 : Math.sin(time * 3 + p.position.x) * .025;
+  u.legs[0].rotation.x = stride; u.legs[1].rotation.x = -stride;
+  const lift = u.action > .05 ? Math.sin((.8 - u.action) * 8) * .22 : 0;
+  p.position.y = Math.max(0, lift);
+  u.arms[0].rotation.z = -.18 - u.action * .8; u.arms[1].rotation.z = .18 + u.action * .8;
 }
 
 const clock = new THREE.Clock();
-function animate(){
-  requestAnimationFrame(animate); const dt=Math.min(clock.getDelta(),.033);
-  if(!paused){
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .033), time = performance.now() * .001;
+  if (!paused) {
     controlled.position.x += keys.x * controlled.userData.speed * dt;
     controlled.position.z += -keys.z * controlled.userData.speed * dt;
-    controlled.position.x=THREE.MathUtils.clamp(controlled.position.x,-8.2,8.2); controlled.position.z=THREE.MathUtils.clamp(controlled.position.z,-4.7,-.35);
-    homePlayers.forEach(p=>{ if(p!==controlled){p.position.x += Math.sin(performance.now()*.0007+p.position.x)*.002; p.position.z += Math.cos(performance.now()*.0006+p.position.z)*.002;} });
-    awayPlayers.forEach((p,i)=>{ const targetX=THREE.MathUtils.clamp(ball.position.x,-7.5,7.5); p.position.x += THREE.MathUtils.clamp(targetX-p.position.x,-1,1)*dt*(1.2+i*.05); p.position.z += THREE.MathUtils.clamp(2.2-p.position.z,-1,1)*dt*.35; });
-    if(ballState.active){
-      ballState.v.y -= 9.8*dt; ball.position.addScaledVector(ballState.v,dt);
-      if(ball.position.y<.2){ const winner=ball.position.z<0?'away':'home'; point(winner); }
-      if(ball.position.z>5.2 || ball.position.z<-5.2){ point(ball.position.z<0?'away':'home'); }
-      if(ball.position.x>8.7 || ball.position.x<-8.7){ ballState.v.x*=-.75; ball.position.x=THREE.MathUtils.clamp(ball.position.x,-8.7,8.7); }
-      if(ball.position.z>-.12 && ball.position.z<.12 && ball.position.y<1.75){ ballState.v.z*=-.78; ball.position.z=ball.position.z<0?-.14:.14; }
-    }
+    controlled.position.x = THREE.MathUtils.clamp(controlled.position.x, -8.25, 8.25);
+    controlled.position.z = THREE.MathUtils.clamp(controlled.position.z, -4.65, -.3);
+    homePlayers.forEach(p => {
+      if (p === controlled) return;
+      const shade = ballState.active && ball.position.z < .2 ? (ball.position.x - p.position.x) * .07 : 0;
+      p.position.x += (p.userData.baseX + shade - p.position.x) * dt * .8;
+      p.position.z += (p.userData.baseZ - p.position.z) * dt * .8;
+    });
+    aiUpdate(dt);
+    if (ballState.active) checkBall(dt);
+    [...homePlayers, ...awayPlayers].forEach(p => animatePlayer(p, dt, time));
   }
-  const target = new THREE.Vector3(controlled.position.x*.22, 1.2, controlled.position.z*.12);
-  camera.position.lerp(new THREE.Vector3(target.x,7.7,13.2),.04); camera.lookAt(target);
-  renderer.render(scene,camera);
+  const target = new THREE.Vector3(controlled.position.x * .18, 1.15, controlled.position.z * .08);
+  camera.position.lerp(new THREE.Vector3(target.x, 7.75, 13.9), .045); camera.lookAt(target);
+  renderer.render(scene, camera);
 }
-updateHUD(); ball.position.set(0,2,-4); animate();
 
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));});
+updateHUD(); resetBall(); animate();
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); });
