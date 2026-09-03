@@ -1,0 +1,21 @@
+/* VOLLEYVERSE REAL VOLLEYBALL BROADCAST THEME */
+:root{--court-blue:#0756a8;--court-deep:#031c3c;--court-cyan:#1fd7ff;--court-orange:#ff7a18;--court-white:#f5fbff;--court-line:rgba(255,255,255,.86)}
+body{background:#031328}
+.menu-screen,.sub-screen{background:radial-gradient(circle at 72% 18%,rgba(31,215,255,.18),transparent 26%),linear-gradient(135deg,#021329 0%,#063c72 52%,#02152d 100%);}
+.menu-screen:after,.sub-screen:after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background:repeating-linear-gradient(90deg,transparent 0 78px,rgba(255,255,255,.025) 79px 80px),linear-gradient(180deg,transparent 65%,rgba(0,0,0,.24))}
+.menu-glow{filter:blur(38px)}.glow-one{background:rgba(31,215,255,.18)}.glow-two{background:rgba(255,122,24,.12)}
+.logo-mark{border-color:rgba(31,215,255,.6);background:linear-gradient(145deg,#0879bc,#063a79);box-shadow:0 0 25px rgba(31,215,255,.28)}
+.logo-copy b,.brand{letter-spacing:.18em}.logo-copy span{color:#a9d8ef}.online-dot{background:#49e08c;box-shadow:0 0 10px #49e08c}
+.eyebrow{color:#63e3ff}.hero-copy h1{font-weight:1000;text-shadow:0 8px 30px rgba(0,0,0,.25)}.hero-copy h1 em{background:linear-gradient(90deg,#fff,#6feaff);-webkit-background-clip:text;background-clip:text}
+.hero-copy p{color:#c1d5e6}.menu-btn{background:linear-gradient(145deg,rgba(5,47,87,.94),rgba(2,22,45,.96));border-color:rgba(137,215,255,.2);box-shadow:0 10px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06)}.menu-btn:hover{border-color:rgba(99,227,255,.65)}.menu-btn span{color:#9bb7cc}.menu-btn i{color:#69e4ff}.menu-btn.featured{background:linear-gradient(110deg,#0875b7,#07529b 55%,#e15e16);border-color:rgba(255,255,255,.32);box-shadow:0 0 38px rgba(31,215,255,.15)}
+.menu-grid .menu-btn:nth-child(odd){border-left:3px solid #1fd7ff}.menu-grid .menu-btn:nth-child(even){border-left:3px solid #ff7a18}
+.menu-footer{color:#8aa9bf}.menu-footer button{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+.mode-card{background:linear-gradient(145deg,rgba(5,55,98,.96),rgba(2,22,43,.98));border-color:rgba(126,214,255,.22)}.mode-card.selected{border-color:#45ddff;box-shadow:0 0 30px rgba(31,215,255,.15)}.mode-card i{color:#62e3ff}
+.modal{background:rgba(0,10,24,.68)}.modal-panel,.panel{background:linear-gradient(145deg,rgba(4,36,67,.98),rgba(2,17,34,.98));border-color:rgba(111,217,255,.25)}.modal-panel p,.panel p{color:#bdd0df}.primary{background:linear-gradient(90deg,#087ec1,#0753a2);box-shadow:0 8px 24px rgba(0,91,160,.3)}
+.scoreboard{background:linear-gradient(135deg,rgba(2,27,52,.88),rgba(5,65,106,.76));border-color:rgba(130,224,255,.35);box-shadow:0 12px 35px rgba(0,0,0,.35)}.team-name{opacity:.9}.sets{color:#67e4ff!important}
+#tip{background:rgba(2,26,48,.72);border:1px solid rgba(103,228,255,.2);color:#d9f7ff}.glass{background:rgba(3,42,72,.72);border-color:rgba(137,224,255,.3)}
+#controls{background:linear-gradient(transparent,rgba(0,12,27,.94))}.joystick{background:radial-gradient(circle,rgba(31,215,255,.12),rgba(2,27,51,.78));border-color:rgba(126,221,255,.35);box-shadow:0 8px 28px rgba(0,0,0,.3)}.joystick:before{border-color:rgba(255,255,255,.2)}.joystick #stick{background:linear-gradient(145deg,#5de9ff,#0876c2);box-shadow:0 0 25px rgba(31,215,255,.55)}
+.action{background:linear-gradient(145deg,#063d68,#03213d);border-color:rgba(122,213,255,.25)}.action.spike{background:linear-gradient(145deg,#ff8a25,#e34b10)}.action.serve{background:linear-gradient(145deg,#16d9e8,#0571b8)}.action.switch{background:linear-gradient(145deg,#7ab5d9,#245b82)}
+#controlledPlayer{color:#76e8ff;background:rgba(1,27,49,.78);border-color:rgba(118,232,255,.28)}
+#orientationNotice{background:linear-gradient(145deg,#021329,#07558c,#03152c)}
+@media(max-width:760px){.menu-content{gap:14px}.hero-copy h1{font-size:44px}.menu-btn{border-radius:12px}.menu-grid .menu-btn{min-height:54px}}
