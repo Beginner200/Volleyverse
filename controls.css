@@ -1,53 +1,47 @@
-/* VOLLEYVERSE — MOBA-STYLE TOUCH CONTROLS v5 */
-/* Landscape-first volleyball control layout: movement left, attack cluster right, utility switch in the far corner. */
-#controls{position:fixed!important;left:0;right:0;bottom:0;height:220px!important;padding:10px 18px 18px!important;display:flex!important;align-items:flex-end!important;justify-content:space-between!important;background:linear-gradient(transparent,rgba(2,7,18,.78) 38%,rgba(2,7,18,.96))!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important;z-index:20!important}
+/* VOLLEYVERSE — MAJESTIC TOUCH CONTROLS v6 */
+#controls{position:fixed!important;left:0;right:0;bottom:0;height:220px!important;padding:10px 18px 18px!important;display:flex!important;align-items:flex-end!important;justify-content:space-between!important;background:linear-gradient(transparent,rgba(2,7,18,.72) 34%,rgba(2,7,18,.97))!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important;z-index:20!important}
+#controls:before{content:'';position:absolute;left:0;bottom:0;width:55vw;height:100%;z-index:0;background:radial-gradient(circle at 35% 65%,rgba(54,190,255,.08),transparent 52%);pointer-events:none}
 
-/* LEFT — movement */
-#controls:before{content:'';position:absolute;left:0;bottom:0;width:55vw;height:100%;z-index:0;touch-action:none;background:transparent}
-#controls .joystick{width:132px!important;height:132px!important;flex:0 0 auto;position:relative;margin:0 0 3px 4px;border:3px solid rgba(225,248,255,.55)!important;border-radius:50%!important;background:radial-gradient(circle,rgba(92,192,235,.28) 0 42%,rgba(8,25,45,.76) 43% 72%,rgba(0,0,0,.2) 73%)!important;box-shadow:inset 0 0 25px rgba(75,205,255,.18),0 8px 25px rgba(0,0,0,.42)!important;touch-action:none!important;z-index:2!important;box-sizing:border-box!important}
-#controls .joystick:before{content:'';position:absolute;inset:22px!important;border:2px solid rgba(255,255,255,.18)!important;border-radius:50%!important;box-sizing:border-box}
-#controls .joystick:after{content:'';position:absolute;inset:8px;border-radius:50%;border:1px dashed rgba(255,255,255,.12);pointer-events:none}
-#controls .joystick #stick{width:58px!important;height:58px!important;left:34px!important;top:34px!important;border-radius:50%!important;background:radial-gradient(circle at 30% 24%,#f4fdff,#35a9ef 62%,#1556a4)!important;border:3px solid rgba(255,255,255,.78)!important;box-shadow:0 7px 18px rgba(0,0,0,.5),0 0 20px rgba(45,205,255,.42)!important;pointer-events:none!important;box-sizing:border-box!important}
+/* JOYSTICK — celestial control ring */
+#controls .joystick{width:132px!important;height:132px!important;flex:0 0 auto;position:relative;margin:0 0 3px 4px;border:2px solid rgba(180,240,255,.72)!important;border-radius:50%!important;background:radial-gradient(circle,rgba(73,195,255,.34) 0 35%,rgba(8,26,48,.9) 36% 68%,rgba(3,12,25,.82) 69%)!important;box-shadow:inset 0 0 22px rgba(67,205,255,.22),0 0 0 4px rgba(89,210,255,.07),0 8px 30px rgba(0,0,0,.55),0 0 28px rgba(45,200,255,.15)!important;touch-action:none!important;z-index:2!important;box-sizing:border-box!important}
+#controls .joystick:before{content:'';position:absolute;inset:17px!important;border:1px solid rgba(180,240,255,.24)!important;border-radius:50%!important;box-shadow:0 0 15px rgba(70,220,255,.12);box-sizing:border-box}
+#controls .joystick:after{content:'✦';position:absolute;inset:0;display:grid;place-items:center;color:rgba(210,249,255,.18);font-size:11px;pointer-events:none}
+#controls .joystick #stick{width:58px!important;height:58px!important;left:34px!important;top:34px!important;border-radius:50%!important;background:radial-gradient(circle at 30% 22%,#ffffff 0 8%,#8beaff 28%,#2299e5 65%,#123c83)!important;border:2px solid rgba(230,252,255,.95)!important;box-shadow:0 7px 18px rgba(0,0,0,.55),0 0 24px rgba(45,210,255,.48),inset 0 0 10px rgba(255,255,255,.35)!important;pointer-events:none!important;box-sizing:border-box!important}
 
-/* RIGHT — importance order: SPIKE > SET/PASS > BLOCK/DIVE > SERVE. */
+/* ACTION CLUSTER — jeweled, tiered hierarchy */
 #controls .action-grid{position:relative!important;width:335px!important;height:205px!important;display:block!important;flex:0 0 auto;z-index:3!important;touch-action:none!important}
-#controls .action{position:absolute!important;width:58px!important;height:58px!important;padding:0!important;margin:0!important;border-radius:50%!important;border:2px solid rgba(255,255,255,.68)!important;color:#fff!important;display:grid!important;place-items:center!important;font-size:0!important;box-sizing:border-box!important;box-shadow:0 7px 18px rgba(0,0,0,.5),inset 0 0 13px rgba(255,255,255,.14)!important;transition:transform .08s,filter .08s!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
-#controls .action:active{transform:scale(.88)!important;filter:brightness(1.35)!important}
-#controls .action:before{font-size:23px!important;font-weight:1000;line-height:1;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.9)}
-#controls .action:after{position:absolute;bottom:-14px;font-size:7px;letter-spacing:.08em;font-weight:900;color:#fff;white-space:nowrap;text-shadow:0 2px 5px #000}
+#controls .action{position:absolute!important;width:58px!important;height:58px!important;padding:0!important;margin:0!important;border-radius:50%!important;border:2px solid rgba(255,255,255,.8)!important;color:#fff!important;display:grid!important;place-items:center!important;font-size:0!important;box-sizing:border-box!important;box-shadow:0 7px 18px rgba(0,0,0,.55),inset 0 0 14px rgba(255,255,255,.16),0 0 12px rgba(100,210,255,.08)!important;transition:transform .08s,filter .08s,box-shadow .08s!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
+#controls .action:active{transform:scale(.9)!important;filter:brightness(1.38)!important}
+#controls .action:before{font-size:23px!important;font-weight:1000;line-height:1;color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.95)}
+#controls .action:after{position:absolute;bottom:-14px;font-size:7px;letter-spacing:.12em;font-weight:1000;color:#dff9ff;white-space:nowrap;text-shadow:0 2px 6px #000}
 
-/* #1 SPIKE — largest and closest to the natural right thumb position. */
-#controls #spikeBtn{width:92px!important;height:92px!important;right:0!important;bottom:9px!important;border-width:3px!important;background:radial-gradient(circle at 32% 25%,#ff9bb3,#b42d67 62%,#641b4b)!important;border-color:#ffd6e0!important;box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 22px rgba(255,80,130,.24)!important}
-#controls #spikeBtn:before{font-size:36px!important}
-#controls #spikeBtn:after{bottom:-15px;font-size:8px;content:'SPIKE'}
+/* Primary attack — crown jewel */
+#controls #spikeBtn{width:92px!important;height:92px!important;right:0!important;bottom:9px!important;border-width:3px!important;background:radial-gradient(circle at 30% 20%,#fff0f6 0 7%,#ff91b5 25%,#b52f6b 62%,#4d153d 100%)!important;border-color:#fff1f6!important;box-shadow:0 10px 25px rgba(0,0,0,.58),0 0 0 5px rgba(255,115,165,.1),0 0 34px rgba(255,75,145,.34),inset 0 0 22px rgba(255,255,255,.16)!important}
+#controls #spikeBtn:before{font-size:37px!important}
+#controls #spikeBtn:after{bottom:-15px;font-size:8px;color:#ffe6ef;content:'SPIKE'}
+#controls #spikeBtn:active{box-shadow:0 4px 15px rgba(0,0,0,.5),0 0 40px rgba(255,80,145,.62)!important}
 
-/* #2 SET — high because it is the main setup action. */
-#controls #setBtn{left:118px;bottom:111px;background:radial-gradient(circle at 35% 25%,#bd94ff,#4a2a9a 72%)!important;border-color:#e5d4ff!important}
-/* #3 PASS — close to the attack button for fast receive-to-attack transitions. */
-#controls #passBtn{left:42px;bottom:45px;background:radial-gradient(circle at 35% 25%,#70e5b8,#176b62 72%)!important;border-color:#c5ffe5!important}
-/* #4 BLOCK — upper attack-side position for quick defensive response. */
-#controls #blockBtn{left:194px;bottom:116px;background:radial-gradient(circle at 35% 25%,#ffd16b,#925516 72%)!important;border-color:#ffe9aa!important}
-/* #5 DIVE — lower defensive position, away from the main attack button. */
-#controls #diveBtn{left:210px;bottom:34px;background:radial-gradient(circle at 35% 25%,#70b2ff,#254a91 72%)!important;border-color:#c9e2ff!important}
-/* #6 SERVE — important but situational, therefore smaller and tucked inward. */
-#controls #serveBtn{left:128px;bottom:17px;background:radial-gradient(circle at 35% 25%,#6eefff,#1654b7 72%)!important;border-color:#baf7ff!important}
+/* Secondary controls */
+#controls #setBtn{left:118px;bottom:111px;background:radial-gradient(circle at 30% 20%,#f2e9ff 0 6%,#b48bff 25%,#5130a4 68%,#25134f)!important;border-color:#eadcff!important;box-shadow:0 7px 19px rgba(0,0,0,.55),0 0 20px rgba(155,100,255,.22),inset 0 0 15px rgba(255,255,255,.13)!important}
+#controls #passBtn{left:42px;bottom:45px;background:radial-gradient(circle at 30% 20%,#d9fff0 0 6%,#65dfb0 25%,#176b62 68%,#0b3838)!important;border-color:#d5fff0!important;box-shadow:0 7px 19px rgba(0,0,0,.55),0 0 20px rgba(65,235,180,.18),inset 0 0 15px rgba(255,255,255,.13)!important}
+#controls #blockBtn{left:194px;bottom:116px;background:radial-gradient(circle at 30% 20%,#fff7d8 0 6%,#ffd06a 25%,#925516 68%,#4b290d)!important;border-color:#fff0b8!important;box-shadow:0 7px 19px rgba(0,0,0,.55),0 0 20px rgba(255,190,65,.2),inset 0 0 15px rgba(255,255,255,.13)!important}
+#controls #diveBtn{left:210px;bottom:34px;background:radial-gradient(circle at 30% 20%,#e5f2ff 0 6%,#73b5ff 25%,#254a91 68%,#10264f)!important;border-color:#d9ebff!important;box-shadow:0 7px 19px rgba(0,0,0,.55),0 0 20px rgba(70,160,255,.18),inset 0 0 15px rgba(255,255,255,.13)!important}
+#controls #serveBtn{left:128px;bottom:17px;background:radial-gradient(circle at 30% 20%,#e4ffff 0 6%,#65e9ff 25%,#1654b7 68%,#0c285b)!important;border-color:#d6fbff!important;box-shadow:0 7px 19px rgba(0,0,0,.55),0 0 20px rgba(55,215,255,.2),inset 0 0 15px rgba(255,255,255,.13)!important}
 
-/* CORNER SWITCH — triangular volleyball-court/arrow shape. It is deliberately separated from combat buttons. */
-#controls #switchBtn{left:auto!important;right:-2px!important;top:-4px!important;bottom:auto!important;width:58px!important;height:52px!important;padding:0!important;border:2px solid rgba(190,245,255,.9)!important;border-radius:8px!important;clip-path:polygon(50% 0,100% 100%,0 100%)!important;background:linear-gradient(145deg,#9ff5ff 0%,#238fc7 42%,#103c78 100%)!important;border-color:#d9fbff!important;box-shadow:0 7px 18px rgba(0,0,0,.5),0 0 18px rgba(52,205,255,.22)!important;z-index:10!important}
-#controls #switchBtn:before{content:'↻';font-size:25px!important;transform:translateY(6px);text-shadow:0 2px 6px rgba(0,0,0,.9)}
-#controls #switchBtn:after{content:'SWITCH';bottom:5px;font-size:6px;letter-spacing:.06em}
-
-/* Volleyball seam detail inside the triangular switch. */
+/* Corner switch — royal triangular crest */
+#controls #switchBtn{left:auto!important;right:-2px!important;top:-4px!important;bottom:auto!important;width:62px!important;height:56px!important;padding:0!important;border:2px solid #e2fbff!important;border-radius:9px!important;clip-path:polygon(50% 0,100% 100%,0 100%)!important;background:linear-gradient(145deg,#d9ffff 0%,#39c5ec 30%,#1670b6 64%,#102e69 100%)!important;box-shadow:0 8px 20px rgba(0,0,0,.58),0 0 24px rgba(45,210,255,.35),inset 0 -8px 15px rgba(0,20,70,.35)!important;z-index:10!important}
+#controls #switchBtn:before{content:'↻';font-size:27px!important;transform:translateY(7px);text-shadow:0 2px 7px rgba(0,0,0,.95)}
+#controls #switchBtn:after{content:'SWITCH';bottom:5px;font-size:6px;letter-spacing:.08em;color:#efffff}
 #controls #switchBtn span{display:none}
 
 #controls #passBtn:before{content:'⇩'}#controls #setBtn:before{content:'⌃'}#controls #spikeBtn:before{content:'↗'}#controls #blockBtn:before{content:'▥'}#controls #diveBtn:before{content:'↘'}#controls #serveBtn:before{content:'🏐'}
 #controls #passBtn:after{content:'PASS'}#controls #setBtn:after{content:'SET'}#controls #blockBtn:after{content:'BLOCK'}#controls #diveBtn:after{content:'DIVE'}#controls #serveBtn:after{content:'SERVE'}
 
-/* Landscape phones — compact but preserve the same priority hierarchy. */
+/* Compact layouts */
 @media (orientation:landscape) and (max-height:600px){
  #controls{height:175px!important;padding:7px 12px 10px!important}
  #controls .joystick{width:108px!important;height:108px!important;margin-left:2px}
- #controls .joystick:before{inset:18px!important}
+ #controls .joystick:before{inset:14px!important}
  #controls .joystick #stick{width:48px!important;height:48px!important;left:28px!important;top:28px!important}
  #controls .action-grid{width:285px!important;height:165px!important}
  #controls .action{width:49px!important;height:49px!important}
@@ -61,11 +55,10 @@
  #controls #blockBtn{left:151px;bottom:93px}
  #controls #diveBtn{left:166px;bottom:26px}
  #controls #serveBtn{left:104px;bottom:8px}
- #controls #switchBtn{right:0!important;left:auto!important;top:-3px!important;width:48px!important;height:44px!important}
+ #controls #switchBtn{right:0!important;left:auto!important;top:-3px!important;width:50px!important;height:45px!important}
  #controls #switchBtn:before{font-size:21px!important;transform:translateY(5px)}
  #controls #switchBtn:after{font-size:5px;bottom:4px}
 }
-
 @media(max-width:760px) and (orientation:portrait){
  #controls{height:205px!important;padding:8px 7px 14px!important}
  #controls .joystick{width:112px!important;height:112px!important}
@@ -77,5 +70,5 @@
  #controls #blockBtn{left:162px;bottom:108px}
  #controls #diveBtn{left:176px;bottom:30px}
  #controls #serveBtn{left:108px;bottom:10px}
- #controls #switchBtn{right:0!important;left:auto!important;top:-3px!important;width:50px!important;height:46px!important}
+ #controls #switchBtn{right:0!important;left:auto!important;top:-3px!important;width:52px!important;height:47px!important}
 }
