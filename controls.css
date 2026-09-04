@@ -1,21 +1,68 @@
-/* VOLLEYVERSE TOUCH CONTROLS — EXTRA-LARGE / EASY-PRESS EDITION */
-#controls{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;padding:12px 20px 24px!important;height:210px!important;background:linear-gradient(transparent,rgba(2,4,12,.94))!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important}
-/* THE ENTIRE LOWER-LEFT SIDE IS THE VIRTUAL JOYSTICK */
-#controls:before{content:'';position:absolute;left:0;bottom:0;width:min(52vw,560px);height:100%;z-index:1;touch-action:none;background:transparent}
-#controls .joystick{width:140px!important;height:140px!important;flex:0 0 auto;position:relative;border:4px solid rgba(210,245,255,.82)!important;border-radius:50%!important;background:radial-gradient(circle,rgba(70,185,235,.5),rgba(2,17,37,.96) 72%)!important;box-shadow:0 10px 35px rgba(0,0,0,.5),inset 0 0 34px rgba(86,220,255,.25),0 0 24px rgba(45,190,255,.28)!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;z-index:2!important;box-sizing:border-box!important}
-#controls .joystick:before{content:'';position:absolute;inset:20px!important;border:3px solid rgba(255,255,255,.32)!important;border-radius:50%!important;box-sizing:border-box}
-#controls .joystick:after{content:'MOVE ANYWHERE';position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:9px;letter-spacing:.14em;color:#fff;font-weight:1000;white-space:nowrap;text-shadow:0 2px 6px #000}
-#controls .joystick #stick{width:62px!important;height:62px!important;left:35px!important;top:35px!important;border-radius:50%!important;background:radial-gradient(circle at 32% 25%,#e1fbff,#2c9df0 68%,#1760bb)!important;border:3px solid rgba(255,255,255,.85)!important;box-shadow:0 7px 20px rgba(0,0,0,.5),0 0 28px rgba(45,205,255,.65)!important;pointer-events:none!important;box-sizing:border-box!important}
-/* LARGE RIGHT ACTION CLUSTER */
-#controls .action-grid{width:270px!important;height:190px!important;display:grid!important;grid-template-columns:repeat(3,78px)!important;grid-template-rows:repeat(3,60px)!important;gap:6px!important;align-items:center!important;justify-content:center!important;position:relative!important;touch-action:none!important;z-index:3!important}
-#controls .action{width:78px!important;height:60px!important;min-width:0!important;min-height:0!important;padding:0!important;border-radius:50%!important;border:3px solid rgba(255,255,255,.7)!important;background:radial-gradient(circle at 35% 25%,rgba(86,165,210,.78),rgba(5,25,52,.99) 72%)!important;color:#fff!important;box-shadow:0 9px 24px rgba(0,0,0,.5),inset 0 0 18px rgba(255,255,255,.15),0 0 14px rgba(100,210,255,.16)!important;font-size:0!important;display:grid!important;place-items:center!important;position:relative!important;transition:transform .08s,filter .08s!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important}
-#controls .action:active{transform:scale(.88)!important;filter:brightness(1.45)!important}
-#controls .action:before{font-size:29px!important;font-weight:1000;line-height:1;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.85)}
-#controls #passBtn{grid-column:1;grid-row:2}#controls #setBtn{grid-column:2;grid-row:1}#controls #spikeBtn{grid-column:3;grid-row:2}#controls #blockBtn{grid-column:3;grid-row:1}#controls #diveBtn{grid-column:1;grid-row:3}#controls #serveBtn{grid-column:2;grid-row:3}#controls #switchBtn{grid-column:3;grid-row:3}
+/* VOLLEYVERSE — MOBA-STYLE TOUCH CONTROLS */
+/* Inspired by modern mobile action/MOBA layouts: left movement stick + right combat/action cluster. */
+#controls{position:fixed!important;left:0;right:0;bottom:0;height:220px!important;padding:10px 18px 18px!important;display:flex!important;align-items:flex-end!important;justify-content:space-between!important;background:linear-gradient(transparent,rgba(2,7,18,.78) 38%,rgba(2,7,18,.96))!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important;z-index:20!important}
+
+/* LEFT MOBA MOVEMENT STICK */
+#controls:before{content:'';position:absolute;left:0;bottom:0;width:55vw;height:100%;z-index:0;touch-action:none;background:transparent}
+#controls .joystick{width:132px!important;height:132px!important;flex:0 0 auto;position:relative;margin:0 0 3px 4px;border:3px solid rgba(225,248,255,.55)!important;border-radius:50%!important;background:radial-gradient(circle,rgba(92,192,235,.28) 0 42%,rgba(8,25,45,.76) 43% 72%,rgba(0,0,0,.2) 73%)!important;box-shadow:inset 0 0 25px rgba(75,205,255,.18),0 8px 25px rgba(0,0,0,.42)!important;touch-action:none!important;z-index:2!important;box-sizing:border-box!important}
+#controls .joystick:before{content:'';position:absolute;inset:22px!important;border:2px solid rgba(255,255,255,.18)!important;border-radius:50%!important;box-sizing:border-box}
+#controls .joystick:after{content:'';position:absolute;inset:8px;border-radius:50%;border:1px dashed rgba(255,255,255,.12);pointer-events:none}
+#controls .joystick #stick{width:58px!important;height:58px!important;left:34px!important;top:34px!important;border-radius:50%!important;background:radial-gradient(circle at 30% 24%,#f4fdff,#35a9ef 62%,#1556a4)!important;border:3px solid rgba(255,255,255,.78)!important;box-shadow:0 7px 18px rgba(0,0,0,.5),0 0 20px rgba(45,205,255,.42)!important;pointer-events:none!important;box-sizing:border-box!important}
+
+/* RIGHT ACTION CLUSTER — radial/MOBA arrangement */
+#controls .action-grid{position:relative!important;width:315px!important;height:205px!important;display:block!important;flex:0 0 auto;z-index:3!important;touch-action:none!important}
+#controls .action{position:absolute!important;width:58px!important;height:58px!important;padding:0!important;margin:0!important;border-radius:50%!important;border:2px solid rgba(255,255,255,.68)!important;color:#fff!important;display:grid!important;place-items:center!important;font-size:0!important;box-sizing:border-box!important;box-shadow:0 7px 18px rgba(0,0,0,.5),inset 0 0 13px rgba(255,255,255,.14)!important;transition:transform .08s,filter .08s!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
+#controls .action:active{transform:scale(.88)!important;filter:brightness(1.35)!important}
+#controls .action:before{font-size:23px!important;font-weight:1000;line-height:1;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.9)}
+#controls .action:after{position:absolute;bottom:-14px;font-size:7px;letter-spacing:.08em;font-weight:900;color:#fff;white-space:nowrap;text-shadow:0 2px 5px #000}
+
+/* Main attack button — deliberately larger like a mobile MOBA basic attack. */
+#controls #spikeBtn{width:88px!important;height:88px!important;right:8px!important;bottom:13px!important;border-width:3px!important;background:radial-gradient(circle at 32% 25%,#ff9bb3,#b42d67 62%,#641b4b)!important;border-color:#ffd6e0!important;box-shadow:0 9px 24px rgba(0,0,0,.55),0 0 22px rgba(255,80,130,.24)!important}
+#controls #spikeBtn:before{font-size:34px!important}
+#controls #spikeBtn:after{bottom:-15px;font-size:8px;content:'SPIKE'}
+
+/* Skill ring */
+#controls #passBtn{left:25px;bottom:37px;background:radial-gradient(circle at 35% 25%,#70e5b8,#176b62 72%)!important;border-color:#c5ffe5!important}
+#controls #setBtn{left:98px;bottom:105px;background:radial-gradient(circle at 35% 25%,#bd94ff,#4a2a9a 72%)!important;border-color:#e5d4ff!important}
+#controls #blockBtn{left:173px;bottom:114px;background:radial-gradient(circle at 35% 25%,#ffd16b,#925516 72%)!important;border-color:#ffe9aa!important}
+#controls #diveBtn{left:185px;bottom:31px;background:radial-gradient(circle at 35% 25%,#70b2ff,#254a91 72%)!important;border-color:#c9e2ff!important}
+#controls #serveBtn{left:111px;bottom:15px;background:radial-gradient(circle at 35% 25%,#6eefff,#1654b7 72%)!important;border-color:#baf7ff!important}
+#controls #switchBtn{left:250px;bottom:112px;width:48px!important;height:48px!important;background:radial-gradient(circle at 35% 25%,#b5b5c2,#414554 72%)!important;border-color:#ededf2!important}
+
 #controls #passBtn:before{content:'⇩'}#controls #setBtn:before{content:'⌃'}#controls #spikeBtn:before{content:'↗'}#controls #blockBtn:before{content:'▥'}#controls #diveBtn:before{content:'↘'}#controls #serveBtn:before{content:'🏐'}#controls #switchBtn:before{content:'↻'}
-#controls #spikeBtn{background:radial-gradient(circle at 35% 25%,#ff7899,#7c1f5e 72%)!important;border-color:#ffd0dc!important}#controls #serveBtn{background:radial-gradient(circle at 35% 25%,#6eefff,#1654b7 72%)!important;border-color:#baf7ff!important}#controls #blockBtn{background:radial-gradient(circle at 35% 25%,#ffd16b,#925516 72%)!important;border-color:#ffe9aa!important}#controls #setBtn{background:radial-gradient(circle at 35% 25%,#bd94ff,#4a2a9a 72%)!important;border-color:#e5d4ff!important}#controls #passBtn{background:radial-gradient(circle at 35% 25%,#70e5b8,#176b62 72%)!important;border-color:#c5ffe5!important}#controls #diveBtn{background:radial-gradient(circle at 35% 25%,#70b2ff,#254a91 72%)!important;border-color:#c9e2ff!important}#controls #switchBtn{background:radial-gradient(circle at 35% 25%,#b5b5c2,#414554 72%)!important;border-color:#ededf2!important}
-#controls .action:after{position:absolute;bottom:-14px;font-size:7px;letter-spacing:.1em;font-weight:1000;color:#fff;white-space:nowrap;text-shadow:0 2px 6px #000}
-#controls #passBtn:after{content:'PASS'}#controls #setBtn:after{content:'SET'}#controls #spikeBtn:after{content:'SPIKE'}#controls #blockBtn:after{content:'BLOCK'}#controls #diveBtn:after{content:'DIVE'}#controls #serveBtn:after{content:'SERVE'}#controls #switchBtn:after{content:'SWITCH'}
-/* Phone landscape: keep controls genuinely large instead of shrinking them to tiny gamepad buttons. */
-@media (orientation:landscape) and (max-height:600px){#controls{height:185px!important;padding:7px 14px 15px!important}#controls:before{width:52vw}#controls .joystick{width:112px!important;height:112px!important;border-width:3px!important}#controls .joystick:before{inset:17px!important;border-width:2px!important}#controls .joystick #stick{width:50px!important;height:50px!important;left:28px!important;top:28px!important}#controls .joystick:after{bottom:-20px;font-size:7px!important}#controls .action-grid{width:235px!important;height:165px!important;grid-template-columns:repeat(3,68px)!important;grid-template-rows:repeat(3,51px)!important;gap:4px!important}#controls .action{width:68px!important;height:51px!important;border-width:2px!important}#controls .action:before{font-size:24px!important}#controls .action:after{font-size:6px!important;bottom:-11px}}
-@media(max-width:760px) and (orientation:portrait){#controls{height:190px!important;padding:8px 8px 18px!important}#controls:before{width:54vw}#controls .joystick{width:112px!important;height:112px!important}#controls .joystick:before{inset:17px!important}#controls .joystick #stick{width:50px!important;height:50px!important;left:29px!important;top:29px!important}#controls .action-grid{width:220px!important;height:170px!important;grid-template-columns:repeat(3,64px)!important;grid-template-rows:repeat(3,52px)!important;gap:4px!important}#controls .action{width:64px!important;height:52px!important}}
+#controls #passBtn:after{content:'PASS'}#controls #setBtn:after{content:'SET'}#controls #blockBtn:after{content:'BLOCK'}#controls #diveBtn:after{content:'DIVE'}#controls #serveBtn:after{content:'SERVE'}#controls #switchBtn:after{content:'SWITCH'}
+
+/* Landscape phones */
+@media (orientation:landscape) and (max-height:600px){
+ #controls{height:175px!important;padding:7px 12px 10px!important}
+ #controls .joystick{width:108px!important;height:108px!important;margin-left:2px}
+ #controls .joystick:before{inset:18px!important}
+ #controls .joystick #stick{width:48px!important;height:48px!important;left:28px!important;top:28px!important}
+ #controls .action-grid{width:265px!important;height:165px!important}
+ #controls .action{width:49px!important;height:49px!important}
+ #controls .action:before{font-size:20px!important}
+ #controls .action:after{font-size:6px;bottom:-11px}
+ #controls #spikeBtn{width:76px!important;height:76px!important;right:2px!important;bottom:7px!important}
+ #controls #spikeBtn:before{font-size:29px!important}
+ #controls #spikeBtn:after{font-size:7px;bottom:-12px}
+ #controls #passBtn{left:8px;bottom:30px}
+ #controls #setBtn{left:67px;bottom:87px}
+ #controls #blockBtn{left:128px;bottom:94px}
+ #controls #diveBtn{left:139px;bottom:25px}
+ #controls #serveBtn{left:82px;bottom:8px}
+ #controls #switchBtn{left:205px;bottom:91px;width:40px!important;height:40px!important}
+}
+
+@media(max-width:760px) and (orientation:portrait){
+ #controls{height:205px!important;padding:8px 7px 14px!important}
+ #controls .joystick{width:112px!important;height:112px!important}
+ #controls .joystick #stick{width:50px!important;height:50px!important;left:29px!important;top:29px!important}
+ #controls .action-grid{width:275px!important;height:190px!important}
+ #controls #spikeBtn{width:82px!important;height:82px!important;right:3px!important;bottom:11px!important}
+ #controls #passBtn{left:12px;bottom:34px}
+ #controls #setBtn{left:79px;bottom:98px}
+ #controls #blockBtn{left:148px;bottom:106px}
+ #controls #diveBtn{left:158px;bottom:29px}
+ #controls #serveBtn{left:96px;bottom:10px}
+ #controls #switchBtn{left:221px;bottom:103px}
+}
