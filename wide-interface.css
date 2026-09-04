@@ -1,0 +1,18 @@
+/* VOLLEYVERSE — WIDE GAMEPLAY INTERFACE */
+/* Uses the full landscape viewport and gives the 3D match more visual breathing room. */
+@media (orientation:landscape) and (min-width:761px){
+  #canvasWrap{left:0!important;right:0!important;top:0!important;bottom:0!important;width:100vw!important;height:100vh!important}
+  #canvasWrap canvas{width:100%!important;height:100%!important;display:block!important}
+  #hud{left:0!important;right:0!important;padding-left:30px!important;padding-right:30px!important}
+  #hud .brand{font-size:16px!important}
+  #hud .scoreboard{min-width:260px!important;justify-content:center!important;padding:10px 20px!important;gap:24px!important}
+  #tip{top:76px!important}
+  #controlledPlayer{top:108px!important}
+  #controls{left:0!important;right:0!important;width:100vw!important}
+}
+@media (orientation:landscape) and (min-width:1100px){
+  #hud{padding-left:42px!important;padding-right:42px!important}
+  #hud .scoreboard{min-width:300px!important;transform:scale(1.08);transform-origin:top center}
+  #tip{top:82px!important}
+  #controlledPlayer{top:116px!important}
+}
