@@ -1,9 +1,10 @@
 (()=>{
-  const VERSION='20260904-4';
+  const VERSION='20260904-6';
   const loadTheme=()=>{
     if(!document.getElementById('volleyballTheme')){const css=document.createElement('link');css.id='volleyballTheme';css.rel='stylesheet';css.href=`volleyball-theme.css?v=${VERSION}`;document.head.appendChild(css)}
     if(!document.getElementById('mainMenuTheme')){const css=document.createElement('link');css.id='mainMenuTheme';css.rel='stylesheet';css.href=`main-menu.css?v=${VERSION}`;document.head.appendChild(css)}
-    /* index.html owns controls.css; only update an existing dynamically-created copy. */
+    const wide=document.getElementById('wideGameplayInterface');
+    if(!wide){const css=document.createElement('link');css.id='wideGameplayInterface';css.rel='stylesheet';css.href=`wide-interface.css?v=${VERSION}`;document.head.appendChild(css)}
     const controlsCss=document.getElementById('volleyverseControls');
     if(controlsCss) controlsCss.href=`controls.css?v=${VERSION}`;
   };
