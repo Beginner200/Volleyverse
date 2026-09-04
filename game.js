@@ -69,8 +69,7 @@ function aiUpdate(dt){awayPlayers.forEach((p,i)=>{const target=ballState.active?
 function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home')homeScore++;else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){$('overlayTitle').textContent=homeSets>awaySets?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
 function physics(dt){
   if(!state.ready||paused)return;
-  // Movement must remain active before, during, and after a rally. Previously it was
-  // incorrectly gated behind ballState.active, which made the joystick appear dead.
+  // Movement must remain active before, during, and after a rally.
   if(controlled){controlled.position.x+=keys.x*controlled.userData.speed*dt;controlled.position.z+=keys.z*controlled.userData.speed*dt;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x,-8.2,8.2);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z,-4.7,-.25)}
   if(!ballState.active)return;
   ballState.cooldown=Math.max(0,ballState.cooldown-dt);ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
@@ -82,8 +81,44 @@ let last=performance.now();function loop(now){const dt=Math.min((now-last)/1000,
 
 ['pass','set','spike','block','dive','serve'].forEach(t=>$(t+'Btn')?.addEventListener('pointerdown',e=>{e.preventDefault();action(t)}));$('switchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();switchPlayer()});$('pauseBtn')?.addEventListener('pointerdown',()=>{paused=!paused;$('pauseBtn').textContent=paused?'▶':'Ⅱ';tip(paused?'MATCH PAUSED':'RALLY LIVE • MOVE AND PLAY')});
 $('playBtn')?.addEventListener('pointerdown',()=>{if($('playBtn').textContent==='PLAY AGAIN'){homeScore=awayScore=homeSets=awaySets=0;setNumber=1;servingTeam='home';controlledIndex=0;resetPlayers();updateControlled();updateHUD();$('overlayTitle').textContent='READY?';$('overlayText').textContent='Move your player, receive, set, spike and defend.';$('playBtn').textContent='PLAY MATCH';resetBall()}else{$('overlay').classList.add('hidden');createScene()}});
-const joy=$('joystick'),stick=$('stick');
-function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let x=e.clientX-cx,y=e.clientY-cy;const max=r.width*.32,len=Math.hypot(x,y);if(len>max){x*=max/len;y*=max/len}stick.style.transform=`translate(${x}px,${y}px)`;keys.x=x/max;keys.z=y/max}
-function joyEnd(){stick.style.transform='translate(0,0)';keys.x=keys.z=0}
-joy?.addEventListener('pointerdown',e=>{e.preventDefault();joy.setPointerCapture?.(e.pointerId);joyMove(e)});joy?.addEventListener('pointermove',e=>{if(e.buttons||e.pressure>0)joyMove(e)});joy?.addEventListener('pointerup',joyEnd);joy?.addEventListener('pointercancel',joyEnd);joy?.addEventListener('lostpointercapture',joyEnd);
+
+const controls=$('controls'),joy=$('joystick'),stick=$('stick');
+let joystickActive=false,joystickPointerId=null;
+function setJoystickFromPoint(clientX,clientY){
+  if(!joy)return;
+  const r=joy.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let x=clientX-cx,y=clientY-cy;
+  const max=Math.max(r.width*.32,1),len=Math.hypot(x,y);
+  if(len>max){x*=max/len;y*=max/len}
+  stick.style.transform=`translate(${x}px,${y}px)`;
+  keys.x=x/max;keys.z=y/max;
+}
+function joyStart(e){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  e.preventDefault();
+  joystickActive=true;joystickPointerId=e.pointerId;
+  controls?.setPointerCapture?.(e.pointerId);
+  setJoystickFromPoint(e.clientX,e.clientY);
+}
+function joyMove(e){
+  if(!joystickActive||e.pointerId!==joystickPointerId)return;
+  e.preventDefault();
+  setJoystickFromPoint(e.clientX,e.clientY);
+}
+function joyEnd(e){
+  if(joystickPointerId!==null&&e?.pointerId!==undefined&&e.pointerId!==joystickPointerId)return;
+  joystickActive=false;joystickPointerId=null;stick.style.transform='translate(0,0)';keys.x=keys.z=0;
+}
+/* The whole left control zone is the virtual joystick. The visible pad is only a visual guide. */
+controls?.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.action'))return;
+  const half=innerWidth*.52;
+  if(e.clientX<=half)joyStart(e);
+},{passive:false});
+controls?.addEventListener('pointermove',joyMove,{passive:false});
+controls?.addEventListener('pointerup',joyEnd,{passive:false});
+controls?.addEventListener('pointercancel',joyEnd,{passive:false});
+controls?.addEventListener('lostpointercapture',joyEnd,{passive:false});
+
 window.addEventListener('resize',resize);const observer=new MutationObserver(()=>{if(!state.ready&&!wrap.classList.contains('hidden'))createScene()});observer.observe(wrap,{attributes:true,attributeFilter:['class']});if(!wrap.classList.contains('hidden'))createScene();
