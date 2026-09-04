@@ -1,45 +1,19 @@
 (()=>{
-  // VOLLEYVERSE is designed for landscape. Try to enter fullscreen and lock
-  // orientation immediately when the browser allows it. Mobile browsers may
-  // require a user gesture, so retry on the first interaction as a fallback.
-  // Keep dynamically loaded styles cache-busted so an older controls.css can
-  // never overwrite the current touch-control design.
-  const VERSION='20260904-3';
+  const VERSION='20260904-4';
   const loadTheme=()=>{
-    if(!document.getElementById('volleyballTheme')){
-      const css=document.createElement('link');css.id='volleyballTheme';css.rel='stylesheet';css.href=`volleyball-theme.css?v=${VERSION}`;document.head.appendChild(css);
-    }
-    if(!document.getElementById('mainMenuTheme')){
-      const menuCss=document.createElement('link');menuCss.id='mainMenuTheme';menuCss.rel='stylesheet';menuCss.href=`main-menu.css?v=${VERSION}`;document.head.appendChild(menuCss);
-    }
-    // index.html already loads the current controls stylesheet. If an older
-    // copy exists from a previous session, replace its href with the same
-    // cache-busted version instead of injecting an unversioned stylesheet.
-    let controlsCss=document.getElementById('volleyverseControls');
-    if(!controlsCss){
-      controlsCss=document.createElement('link');controlsCss.id='volleyverseControls';controlsCss.rel='stylesheet';document.head.appendChild(controlsCss);
-    }
-    controlsCss.href=`controls.css?v=${VERSION}`;
+    if(!document.getElementById('volleyballTheme')){const css=document.createElement('link');css.id='volleyballTheme';css.rel='stylesheet';css.href=`volleyball-theme.css?v=${VERSION}`;document.head.appendChild(css)}
+    if(!document.getElementById('mainMenuTheme')){const css=document.createElement('link');css.id='mainMenuTheme';css.rel='stylesheet';css.href=`main-menu.css?v=${VERSION}`;document.head.appendChild(css)}
+    /* index.html owns controls.css; only update an existing dynamically-created copy. */
+    const controlsCss=document.getElementById('volleyverseControls');
+    if(controlsCss) controlsCss.href=`controls.css?v=${VERSION}`;
   };
-  const hideOrientationNotice=()=>document.body.classList.remove('portrait-blocked');
+  const hide=()=>document.body.classList.remove('portrait-blocked');
   const lockLandscape=async()=>{
-    try{
-      if(document.documentElement.requestFullscreen && !document.fullscreenElement){
-        await document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{});
-      }
-    }catch(e){}
-    try{
-      if(screen.orientation?.lock) await screen.orientation.lock('landscape');
-    }catch(e){}
-    hideOrientationNotice();
+    try{if(document.documentElement.requestFullscreen&&!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{})}catch(e){}
+    try{if(screen.orientation?.lock)await screen.orientation.lock('landscape')}catch(e){}
+    hide();
   };
-  const start=()=>{loadTheme();hideOrientationNotice();lockLandscape();};
-  loadTheme();
-  hideOrientationNotice();
-  start();
-  window.addEventListener('resize',hideOrientationNotice);
-  screen.orientation?.addEventListener?.('change',hideOrientationNotice);
-  const retry=()=>lockLandscape();
-  document.addEventListener('pointerdown',retry,{once:true,passive:true});
-  document.addEventListener('touchstart',retry,{once:true,passive:true});
+  loadTheme();hide();lockLandscape();
+  window.addEventListener('resize',hide);screen.orientation?.addEventListener?.('change',hide);
+  const retry=()=>lockLandscape();document.addEventListener('pointerdown',retry,{once:true,passive:true});document.addEventListener('touchstart',retry,{once:true,passive:true});
 })();
