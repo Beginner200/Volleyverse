@@ -142,8 +142,8 @@ function aiTouch(team,players){
   const candidates=players.filter(p=>!(home&&p===controlled));if(!candidates.length)return false;const touches=ballState.teamTouches[team];if(touches>=3)return false;
   const receiver=touches===0?chooseReceiver(candidates,ball.position.x):candidates.reduce((a,p)=>Math.hypot(p.position.x-ball.position.x,p.position.z-ball.position.z)<Math.hypot(a.position.x-ball.position.x,a.position.z-ball.position.z)?p:a,candidates[0]);
   const profile=aiDifficultyProfile();const reach=1.15+profile.reaction*.48;if(Math.hypot(ball.position.x-receiver.position.x,ball.position.z-receiver.position.z)>reach||receiver.userData.cooldown>0)return false;
-  const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=chooseAttackTarget(players,ball.position.x);let target=setter,label='RECEIVE';
-  if(touches===1){target=chooseSetterTarget(players);label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
+  const decision=aiRallyDecision(team,players);const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=decision.player||chooseAttackTarget(players,ball.position.x);let target=setter,label='RECEIVE';
+  if(touches===1){target=attacker;label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
   if(touches===0){launchTo(setter.position.x,setter.position.z,2.2,5.8)}else if(touches===1){launchTo(target.position.x,target.position.z,3.25,5.3)}else{const lane=chooseAttackLane(attacker);const miss=(Math.random()-.5)*(1.15*(1-profile.accuracy));launchTo(THREE.MathUtils.clamp(lane+miss,-4.0,4.0),home?4.0:-4.0,.3,7.4)}
   ballState.targetX=target.position.x;ballState.targetZ=target.position.z;ballState.lastTouch=team;ballState.side=team;ballState.teamTouches[team]++;ballState.lastAction=label.toLowerCase();receiver.userData.action=.55;receiver.userData.cooldown=.75;ballState.cooldown=.4;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
 }
@@ -165,6 +165,21 @@ function aiBlock(){
   const defenders=attackingHome?awayPlayers:homePlayers.filter(p=>p!==controlled);const blockers=defenders.filter(p=>p.userData.position==='MB'||p.userData.position==='OPP'||p.userData.position==='OH');if(!blockers.length)return false;
   const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.22,-4.15,4.15);const blocker=blockers.reduce((a,p)=>Math.abs(p.position.x-predictedX)<Math.abs(a.position.x-predictedX)?p:a,blockers[0]);
   if(Math.abs(blocker.position.x-predictedX)>1.45||Math.random()>profile.block)return false;blocker.position.x=predictedX;blocker.userData.action=.8;const partner=blockers.find(p=>p!==blocker&&Math.abs(p.position.x-predictedX)<2.8);if(partner){partner.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?-1.05:1.05),-4.15,4.15);partner.userData.action=.65}ballState.v.z*=-.62;ballState.v.y=Math.max(3.2,ballState.v.y*.35);ballState.lastTouch=attackingHome?'away':'home';ballState.side=ballState.lastTouch;ballState.teamTouches[ballState.lastTouch]=0;ballState.cooldown=.5;tip('BLOCK! • '+(attackingHome?'RIVALS':'YOUR TEAM')+' GET A TOUCH');return true;
+}
+function aiRallyDecision(team,players){
+  const touches=ballState.teamTouches[team];
+  const home=team==='home';
+  const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];
+  const attacker=chooseAttackTarget(players,ball.position.x);
+  const pressure=Math.abs(ball.position.x-attacker.position.x);
+  if(touches===0)return {kind:'receive',player:chooseReceiver(players,ball.position.x)};
+  if(touches===1){
+    const options=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
+    const pool=options.filter(p=>Math.abs(p.position.x-ball.position.x)<4.8);
+    return {kind:'set',player:(pool.length?pool:options)[Math.floor(Math.random()*(pool.length?pool.length:options.length))]||attacker};
+  }
+  if(touches===2)return {kind:'attack',player:attacker,pressure};
+  return {kind:'reset',player:setter};
 }
 function aiDifficultyProfile(){
   const mode=(localStorage.getItem('volleyverseDifficulty')||'medium').toLowerCase();
