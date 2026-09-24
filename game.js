@@ -108,8 +108,27 @@ function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'
 function physics(dt){
   if(!state.ready||paused)return;if(controlled){controlled.position.x+=keys.x*controlled.userData.speed*dt;controlled.position.z+=keys.z*controlled.userData.speed*dt;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x,-4.25,4.25);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z,-4.35,-.25);controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z}
   aiUpdate(dt);if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
-  if((prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0)){ballState.side=ball.position.z<0?'home':'away';ballState.teamTouches[ballState.side]=0;ballState.crossed=true;tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND')}
-  if(ball.position.y<.2){ball.position.y=.2;point(ballState.lastTouch==='home'?'away':'home');return}if(Math.abs(ball.position.z)>5.05||Math.abs(ball.position.x)>9.05){point(ball.position.z<0?'away':'home');return}if(Math.abs(ball.position.z)<.08&&ball.position.y<2.45&&ball.position.y>.7)ballState.v.z*=-.82;
+  const netTop=2.43,ballRadius=.2;
+  const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
+  if(crossedCenter){
+    // The ball may cross the net freely when it is above the net. Only collide with the
+    // physical net when the ball actually reaches the net height, preventing false bounces.
+    const crossingY=ball.position.y;
+    if(crossingY<=netTop+ballRadius){
+      ball.position.z=prevZ<0?-(ballRadius+.025):(ballRadius+.025);
+      ballState.v.z*=-.82;
+      ballState.v.y=Math.min(ballState.v.y,1.8);
+      ballState.cooldown=Math.max(ballState.cooldown,.18);
+      ballState.side=prevZ<0?'home':'away';
+      tip('NET CONTACT • PLAY THE NEXT BALL');
+    }else{
+      ballState.side=ball.position.z<0?'home':'away';
+      ballState.teamTouches[ballState.side]=0;
+      ballState.crossed=true;
+      tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND');
+    }
+  }
+  if(ball.position.y<.2){ball.position.y=.2;point(ballState.lastTouch==='home'?'away':'home');return}if(Math.abs(ball.position.z)>5.05||Math.abs(ball.position.x)>9.05){point(ball.position.z<0?'away':'home');return}
 }
 function animatePlayers(dt){const now=performance.now();[...homePlayers,...awayPlayers].forEach(p=>{const u=p.userData;u.cooldown=Math.max(0,u.cooldown-dt);u.action=Math.max(0,u.action-dt);const moving=Math.abs(u.moveX)+Math.abs(u.moveZ)>.12;const speed=Math.hypot(u.moveX,u.moveZ);const stride=moving?Math.sin(now*.014+u.phase)*Math.min(.42,.16+speed*.18):Math.sin(now*.002+u.phase)*.025;const rallyReady=ballState.active&&!moving;const crouch=rallyReady?-.10:0;const swing=u.action>0?Math.sin(u.action*18)*.8:0;u.legs[0].rotation.x=stride;u.legs[1].rotation.x=-stride;u.arms[0].rotation.z=-.2-swing+(rallyReady?-.18:0);u.arms[1].rotation.z=.2+swing+(rallyReady?.18:0);u.arms[0].rotation.x=moving?-.18:0;u.arms[1].rotation.x=moving?.18:0;u.stance=crouch;p.position.y=u.action>.6?Math.max(0,Math.sin((.8-u.action)*Math.PI)*.18):0;p.rotation.y=Math.atan2(u.moveX,Math.max(.001,Math.abs(u.moveZ)))+(p.userData.home?Math.PI:0);const torso=p.children[0];if(torso)torso.rotation.x=crouch;if(u.action>0&&u.action<.35){u.arms[0].rotation.z-=.25;u.arms[1].rotation.z+=.25}})}
 function resize(){if(!state.ready)return;state.camera.aspect=Math.max(innerWidth,1)/Math.max(innerHeight,1);state.camera.updateProjectionMatrix();state.renderer.setSize(Math.max(innerWidth,1),Math.max(innerHeight,1),false)}
