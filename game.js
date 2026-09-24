@@ -74,8 +74,35 @@ function action(type){
 function switchPlayer(){if(rallyLocked)return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
 function roleTarget(p,home,targetX,targetZ){
   const baseX=p.userData.baseX,baseZ=p.userData.baseZ,role=p.userData.position;const side=home?-1:1;let tx=baseX,tz=baseZ;
+  // Advanced 6v6 positioning: players keep role lanes and cover the likely attack zone
+  // instead of all converging on the ball.
+  const dangerX=THREE.MathUtils.clamp(targetX,-4.15,4.15);
+  const dangerZ=home?THREE.MathUtils.clamp(targetZ,-4.2,-.25):THREE.MathUtils.clamp(targetZ,.25,4.2);
   if(!ballState.active){tx=baseX+Math.sin(performance.now()*.001+p.userData.phase)*.18;tz=baseZ+Math.sin(performance.now()*.0012+p.userData.phase)*.08}
-  else{const towardX=THREE.MathUtils.clamp((targetX-baseX)*.34,-1.7,1.7);if(role==='S'||role==='SETTER'){tx=THREE.MathUtils.clamp(targetX*.28,-3.0,3.0);tz=home?-2.45:2.45}else if(role==='MB'){tx=THREE.MathUtils.clamp(targetX*.58,-4.0,4.0);tz=home?-1.0:1.0}else if(role==='L'||role==='LIBERO'){tx=THREE.MathUtils.clamp(targetX*.78,-4.1,4.1);tz=home?-3.55:3.55}else{tx=baseX+towardX;tz=home?-2.55:2.55}const danger=home?targetZ<-.9:targetZ>.9;if(danger){tx+=THREE.MathUtils.clamp((targetX-tx)*.25,-1.25,1.25);tz=home?Math.max(-4.2,tz-.18):Math.min(4.2,tz+.18)}}
+  else{
+    const towardX=THREE.MathUtils.clamp((dangerX-baseX)*.34,-1.7,1.7);
+    const front=home?-1:1;
+    if(role==='S'||role==='SETTER'){
+      tx=THREE.MathUtils.clamp(dangerX*.24,-3.0,3.0);tz=home?-2.55:2.55;
+    }else if(role==='MB'){
+      tx=THREE.MathUtils.clamp(dangerX*.62,-4.0,4.0);tz=home?-1.0:1.0;
+      // Middles shade toward the attacker and stay ready for a block.
+      if((home&&targetZ>-.9)||(!home&&targetZ<.9))tz=home?-.55:.55;
+    }else if(role==='L'||role==='LIBERO'){
+      tx=THREE.MathUtils.clamp(dangerX*.82,-4.1,4.1);tz=home?-3.55:3.55;
+    }else{
+      tx=baseX+towardX;tz=home?-2.55:2.55;
+    }
+    // Back-row coverage spreads behind the predicted landing lane.
+    const danger=home?dangerZ<-.9:dangerZ>.9;
+    if(danger){
+      tx+=THREE.MathUtils.clamp((dangerX-tx)*.28,-1.35,1.35);
+      tz=home?Math.max(-4.2,tz-.28):Math.min(4.2,tz+.28);
+    }
+    // Keep each role on its own side of the court.
+    if(role==='S'||role==='SETTER')tz=home?Math.min(tz,-1.45):Math.max(tz,1.45);
+    if(role==='L'||role==='LIBERO')tz=home?Math.min(tz,-2.65):Math.max(tz,2.65);
+  }
   return {x:THREE.MathUtils.clamp(tx,-4.15,4.15),z:home?THREE.MathUtils.clamp(tz,-4.2,-.35):THREE.MathUtils.clamp(tz,.35,4.2),side};
 }
 function moveAIPlayer(p,dt,targetX,targetZ,home){
@@ -83,13 +110,45 @@ function moveAIPlayer(p,dt,targetX,targetZ,home){
   if(dist>.04){const step=Math.min(dist,max);p.position.x+=dx/dist*step;p.position.z+=dz/dist*step;p.userData.moveX=dx/dist;p.userData.moveZ=dz/dist}else{p.userData.moveX=0;p.userData.moveZ=0}
   p.position.x=THREE.MathUtils.clamp(p.position.x,-4.25,4.25);p.position.z=home?THREE.MathUtils.clamp(p.position.z,-4.35,-.25):THREE.MathUtils.clamp(p.position.z,.25,4.35);
 }
+function chooseAttackTarget(players,ballX){
+  const attackers=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
+  if(!attackers.length)return players[0];
+  return attackers.reduce((best,p)=>Math.abs(p.position.x-ballX)<Math.abs(best.position.x-ballX)?p:best,attackers[0]);
+}
 function aiTouch(team,players){
   if(!ballState.active||ballState.cooldown>0)return false;const home=team==='home',onSide=home?ball.position.z<-.25:ball.position.z>.25;if(!onSide||ball.position.y<.28||ball.position.y>4.0)return false;
   const candidates=players.filter(p=>!(home&&p===controlled));if(!candidates.length)return false;const receiver=candidates.reduce((a,p)=>Math.hypot(p.position.x-ball.position.x,p.position.z-ball.position.z)<Math.hypot(a.position.x-ball.position.x,a.position.z-ball.position.z)?p:a,candidates[0]);
   if(Math.hypot(ball.position.x-receiver.position.x,ball.position.z-receiver.position.z)>1.55||receiver.userData.cooldown>0)return false;const touches=ballState.teamTouches[team];if(touches>=3)return false;
-  const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=players.find(p=>p.userData.position==='OH'||p.userData.position==='OPP')||players[0];let target=setter,label='RECEIVE';if(touches===1){target=setter;label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
-  if(touches===0)launchTo(target.position.x,target.position.z,2.2,5.8);else if(touches===1)launchTo(target.position.x,target.position.z,3.25,5.3);else launchTo(THREE.MathUtils.clamp(target.position.x,-4.0,4.0),home?4.0:-4.0,.3,7.4);
+  const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];
+  const attacker=chooseAttackTarget(players,ball.position.x);
+  let target=setter,label='RECEIVE';
+  if(touches===1){target=setter;label='SET'}
+  else if(touches===2){target=attacker;label='ATTACK'}
+  if(touches===0){
+    // First touch goes to the setter area, not simply to the nearest player.
+    launchTo(target.position.x,target.position.z,2.2,5.8);
+  }else if(touches===1){
+    launchTo(target.position.x,target.position.z,3.25,5.3);
+  }else{
+    // Third touch attacks an open lane selected from the opposing formation.
+    const lane=THREE.MathUtils.clamp(attacker.position.x+(Math.random()-.5)*1.4,-4.0,4.0);
+    launchTo(lane,home?4.0:-4.0,.3,7.4);
+  }
   ballState.targetX=target.position.x;ballState.targetZ=target.position.z;ballState.lastTouch=team;ballState.side=team;ballState.teamTouches[team]++;ballState.lastAction=label.toLowerCase();receiver.userData.action=.55;receiver.userData.cooldown=.75;ballState.cooldown=.4;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
+}
+function aiCoverage(){
+  if(!ballState.active)return;
+  const defendingHome=ballState.lastTouch==='away';
+  const defenders=defendingHome?homePlayers:awayPlayers;
+  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.32,-4.15,4.15);
+  defenders.forEach(p=>{
+    if(p===controlled)return;
+    const role=p.userData.position;
+    // Cover likely rebound/deflection zones while preserving role spacing.
+    if(role==='L'||role==='LIBERO'||role==='OH'||role==='OPP'){
+      p.userData.aiTargetX=THREE.MathUtils.clamp((p.userData.aiTargetX*.55)+(predictedX*.45),-4.1,4.1);
+    }
+  });
 }
 function aiBlock(){
   if(!ballState.active||ballState.cooldown>0||ball.position.y<1.55)return false;
@@ -102,7 +161,12 @@ function aiUpdate(dt){
   const targetX=ballState.active?ball.position.x:0,targetZ=ballState.active?ball.position.z:0;
   homePlayers.forEach((p,i)=>{if(p===controlled){p.userData.moveX=keys.x;p.userData.moveZ=keys.z;return}moveAIPlayer(p,dt,targetX,targetZ,true);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
   awayPlayers.forEach(p=>{moveAIPlayer(p,dt,targetX,targetZ,false);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
-  if(ballState.active){if(aiBlock())return;if(aiTouch('home',homePlayers))return;aiTouch('away',awayPlayers)}
+  if(ballState.active){
+    aiCoverage();
+    if(aiBlock())return;
+    if(aiTouch('home',homePlayers))return;
+    aiTouch('away',awayPlayers);
+  }
 }
 function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
 function physics(dt){
