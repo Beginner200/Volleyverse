@@ -4,6 +4,8 @@ const $ = id => document.getElementById(id);
 const wrap = $('canvasWrap');
 const state = { renderer:null, camera:null, scene:null, ready:false, running:false };
 const keys = {x:0,z:0};
+const remoteKeys = {x:0,z:0};
+let remotePlayerIndex=1;
 let homeScore=0, awayScore=0, homeSets=0, awaySets=0, setNumber=1, matchHomePoints=0;
 let servingTeam='home', controlledIndex=0, controlled=null, paused=false, rallyLocked=false;
 const controlMode=()=>localStorage.getItem('volleyverseControlMode')||'team';
@@ -63,6 +65,18 @@ function buildTeams(){
   const away=[['Vex','OH',0xff4f79],['Luna','S',0xff4f79],['Orion','OPP',0xff4f79],['Kai','MB',0xff8847],['Sora','MB',0xff8847],['Axel','L',0xff8847]];awayPlayers=away.map((c,i)=>createPlayer(c[2],c[0],pos[i][0],-pos[i][1],false,c[1],{}));controlled=homePlayers[0];
 }
 function buildBall(){ball=new THREE.Mesh(new THREE.SphereGeometry(.2,20,14),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.25}));state.scene.add(ball)}
+function applyRemoteInput(input){
+  if(!localConnected()||!localHost())return;
+  if(input?.kind==='move'){remoteKeys.x=THREE.MathUtils.clamp(Number(input.x)||0,-1,1);remoteKeys.z=THREE.MathUtils.clamp(Number(input.z)||0,-1,1)}
+  if(input?.kind==='switch'){remotePlayerIndex=(remotePlayerIndex+1)%homePlayers.length}
+  if(input?.kind==='action'&&input.type){const old=controlledIndex;const oldControlled=controlled;controlledIndex=THREE.MathUtils.clamp(remotePlayerIndex,0,5);updateControlled();action(input.type);controlledIndex=old;controlled=oldControlled;updateControlled()}
+}
+function updateRemotePlayer(dt){
+  const p=homePlayers[remotePlayerIndex];if(!p||p===controlled)return;
+  p.userData.remoteControlled=true;p.userData.moveX=remoteKeys.x;p.userData.moveZ=remoteKeys.z;
+  const speed=p.userData.speed||4.2;const mag=Math.hypot(remoteKeys.x,remoteKeys.z);
+  if(mag>.05&&!rallyLocked){p.position.x=THREE.MathUtils.clamp(p.position.x+remoteKeys.x*speed*dt,-4.25,4.25);p.position.z=THREE.MathUtils.clamp(p.position.z+remoteKeys.z*speed*dt,-4.35,-.25)}
+}
 function updateControlled(){homePlayers.forEach((p,i)=>{p.userData.ring.visible=i===controlledIndex;p.userData.arrow.visible=i===controlledIndex});controlled=homePlayers[controlledIndex]||homePlayers[0]}
 function resetPlayers(){[...homePlayers,...awayPlayers].forEach(p=>{p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX})}
 function resetBall(){if(!ball||!controlled)return;ballState.active=false;ballState.v.set(0,0,0);ballState.lastTouch=servingTeam;ballState.cooldown=0;ballState.touches=0;ballState.lastAction='serve';ballState.side=servingTeam;ballState.targetX=controlled.position.x;ballState.targetZ=servingTeam==='home'?-2.5:2.5;ballState.teamTouches={home:0,away:0};ballState.crossed=false;ball.position.set(servingTeam==='home'?controlled.position.x:0,1.95,servingTeam==='home'?-4.15:4.15);rallyLocked=false;if(servingTeam==='home'){tip('READY • SERVE TO START THE RALLY');setTimeout(()=>{if(state.ready&&!ballState.active&&!rallyLocked&&servingTeam==='home')serve()},650)}else{tip('RIVALS SERVING • RECEIVE THE BALL');setTimeout(aiServe,450)}}
@@ -100,10 +114,7 @@ function applyLocalSnapshot(s){
 window.addEventListener('vv-local-packet',e=>{
   const p=e.detail||{};
   if(p.type==='input'&&localHost()){
-    const input=p.input||{};
-    if(input.kind==='move'){keys.x=THREE.MathUtils.clamp(Number(input.x)||0,-1,1);keys.z=THREE.MathUtils.clamp(Number(input.z)||0,-1,1)}
-    if(input.kind==='action'&&input.type) action(input.type);
-    if(input.kind==='switch') switchPlayer();
+    applyRemoteInput(p.input||{});
   }else if(p.type==='snapshot'&&!localHost()){
     if((p.seq||0)<localLastSeq)return;localLastSeq=p.seq;applyLocalSnapshot(p.state);
   }else if(p.type==='ready'&&localHost()){
@@ -341,7 +352,7 @@ function defensivePositioning(dt){
 function aiUpdate(dt){
   if(ballState.active)aiCoverage();
   const targetX=ballState.active?ball.position.x:0,targetZ=ballState.active?ball.position.z:0;
-  homePlayers.forEach((p,i)=>{if(p===controlled){p.userData.moveX=keys.x;p.userData.moveZ=keys.z;return}moveAIPlayer(p,dt,targetX,targetZ,true);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
+  homePlayers.forEach((p,i)=>{if(p===controlled){p.userData.moveX=keys.x;p.userData.moveZ=keys.z;return}if(p.userData.remoteControlled){return}moveAIPlayer(p,dt,targetX,targetZ,true);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
   awayPlayers.forEach(p=>{moveAIPlayer(p,dt,targetX,targetZ,false);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
   if(ballState.active){if(aiBlock())return;if(aiTouch('home',homePlayers))return;if(aiTouch('away',awayPlayers))return;const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;const target=chooseDefenseTarget(defenders);if(target&&target!==controlled)target.userData.coverageX=THREE.MathUtils.clamp(ball.position.x,-4.1,4.1);if(defendingHome&&defensiveRead('home',homePlayers))return;if(!defendingHome&&defensiveRead('away',awayPlayers))return}
 }
@@ -380,7 +391,8 @@ function autoSetAssist(){
 }
 function physics(dt){
   if(!state.ready||paused)return;
-  if(localConnected()&&!localHost())return;if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
+  if(localConnected()&&!localHost())return;
+  if(localConnected()&&localHost())updateRemotePlayer(dt);if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
   aiUpdate(dt);defensivePositioning(dt);netApproachAssist();autoReceiveAssist();autoSetAssist();if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
   const netTop=2.43,ballRadius=.2;const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
   if(crossedCenter){const crossingY=ball.position.y;if(crossingY<=netTop+ballRadius){ball.position.z=prevZ<0?-(ballRadius+.025):(ballRadius+.025);ballState.v.z*=-.82;ballState.v.y=Math.min(ballState.v.y,1.8);ballState.cooldown=Math.max(ballState.cooldown,.18);ballState.side=prevZ<0?'home':'away';tip('NET CONTACT • PLAY THE NEXT BALL')}else{ballState.side=ball.position.z<0?'home':'away';ballState.teamTouches[ballState.side]=0;ballState.crossed=true;tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND')}}
