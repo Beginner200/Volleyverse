@@ -227,17 +227,23 @@ function aiBlock(){
 }
 function aiRallyDecision(team,players){
   const touches=ballState.teamTouches[team];
-  const home=team==='home';
   const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];
+  const attackers=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
   const attacker=chooseAttackTarget(players,ball.position.x);
   const pressure=Math.abs(ball.position.x-attacker.position.x);
+  const profile=aiDifficultyProfile();
   if(touches===0)return {kind:'receive',player:chooseReceiver(players,ball.position.x)};
   if(touches===1){
-    const options=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
-    const pool=options.filter(p=>Math.abs(p.position.x-ball.position.x)<4.8);
-    return {kind:'set',player:(pool.length?pool:options)[Math.floor(Math.random()*(pool.length?pool.length:options.length))]||attacker};
+    const target=chooseSetterTarget(players);
+    return {kind:'set',player:target};
   }
-  if(touches===2)return {kind:'attack',player:attacker,pressure};
+  if(touches===2){
+    // Under pressure, favor the safest available attacker; with better AI, vary the attack point.
+    const safe=attackers.filter(p=>Math.abs(p.position.x-ball.position.x)<3.6);
+    const pool=safe.length?safe:attackers;
+    const player=profile.accuracy>.9&&pool.length?pool[Math.floor(Math.random()*pool.length)]:attacker;
+    return {kind:'attack',player,pressure};
+  }
   return {kind:'reset',player:setter};
 }
 function aiDifficultyProfile(){
