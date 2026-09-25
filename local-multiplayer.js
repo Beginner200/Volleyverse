@@ -61,6 +61,8 @@ function bindChannel(ch){
       const packet=JSON.parse(e.data);
       window.dispatchEvent(new CustomEvent('vv-local-packet',{detail:packet}));
       if(packet.type==='hello') localStatus('CONNECTED • PEER READY',true);
+      if(packet.type==='ping'){sendPacket({type:'pong',t:Date.now()})}
+      if(packet.type==='pong') netState.lastPongAt=netNow();
     }catch(err){}
   };
 }
@@ -134,7 +136,32 @@ async function copyRoomCode(){
   try{await navigator.clipboard.writeText(code);localStatus('ROOM CODE COPIED • '+code,true)}
   catch(e){localStatus('ROOM CODE • '+code)}
 }
-window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,send:sendPacket,reset:resetLocal};
+
+const netState={seq:0,lastInputAt:0,lastSnapshotAt:0,lastPingAt:0,lastPongAt:0};
+function netNow(){return performance.now()}
+function sendInput(input){
+  const now=netNow();
+  if(now-netState.lastInputAt<45)return false;
+  netState.lastInputAt=now;
+  sendPacket({type:'input',seq:++netState.seq,t:Date.now(),input});
+  return true;
+}
+function sendSnapshot(snapshot){
+  const now=netNow();
+  if(now-netState.lastSnapshotAt<80)return false;
+  netState.lastSnapshotAt=now;
+  sendPacket({type:'snapshot',seq:++netState.seq,t:Date.now(),state:snapshot});
+  return true;
+}
+function sendReady(){sendPacket({type:'ready',t:Date.now()})}
+function netHeartbeat(){
+  if(!localState.connected)return;
+  const now=netNow();
+  if(now-netState.lastPingAt>1800){netState.lastPingAt=now;sendPacket({type:'ping',t:Date.now()})}
+  if(now-netState.lastPongAt>6500){localState.connected=false;localStatus('CONNECTION LOST • CHECK WI-FI / HOTSPOT');}
+}
+
+window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,send:sendPacket,sendInput,sendSnapshot,sendReady,isHost:()=>localState.host,reset:resetLocal};
 
 $('localHostBtn')?.addEventListener('click',()=>setLocalMode('host'));
 $('localJoinBtn')?.addEventListener('click',()=>setLocalMode('join'));
@@ -144,3 +171,5 @@ $('copyRoomCode')?.addEventListener('click',copyRoomCode);
 $('localPrimary')?.addEventListener('click',()=>localMode==='host'?createOffer():createAnswer());
 $('localApply')?.addEventListener('click',applySignal);
 resetLocal();
+
+setInterval(netHeartbeat,1000);
