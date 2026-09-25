@@ -84,7 +84,7 @@ function action(type){
   if(type==='pass'){const quality=skillQuality(controlled,'pass',.88)*(.72+timing*.28);const setter=homePlayers.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||homePlayers[1];const dir=controlled.userData.moveX||0;const lead=THREE.MathUtils.clamp(dir*.9,-.9,.9);targetX=THREE.MathUtils.clamp(setter.position.x+lead,-4.0,4.0);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.4),setter.position.z,2.2,5.8*quality);ballState.targetX=targetX;ballState.targetZ=setter.position.z;tip(Math.abs(dir)>.35?'PASS • DIRECTIONAL RECEIVE':'PASS • FIRST TOUCH → SETTER')}
   else if(type==='set'){const quality=skillQuality(controlled,'set',.9)*(.72+timing*.28);const attackers=homePlayers.filter(p=>p.userData.position==='OH'||p.userData.position==='OPP');const dir=controlled.userData.moveX||0;let attacker=attackers[Math.abs(dir)>.25&&attackers[1]?1:0]||homePlayers[2];targetX=THREE.MathUtils.clamp(attacker.position.x+(dir*.45),-4.0,4.0);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.2),attacker.position.z,3.25,5.3*quality);ballState.targetX=targetX;ballState.targetZ=attacker.position.z;tip(Math.abs(dir)>.25?'SET • DIRECTIONAL ATTACK':'SET • SECOND TOUCH → ATTACK')}
   else if(type==='spike'){const approach=Math.hypot(controlled.userData.moveX||0,controlled.userData.moveZ||0);const jump=jumpPlayer(controlled,5.15);const quality=skillQuality(controlled,'spike',.92)*(.65+timing*.35)*(.9+Math.min(approach,1)*.1);const lane=THREE.MathUtils.clamp((controlled.position.x+((controlled.userData.moveX||0)*.7)),-4.0,4.0);targetX=THREE.MathUtils.clamp(lane+dx*.55,-4.0,4.0);const targetZ=THREE.MathUtils.clamp(4.0+Math.abs(controlled.position.z)*.02,3.65,4.2);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.5),targetZ,.3,7.4*(.86+quality*.14));ballState.targetX=targetX;ballState.targetZ=targetZ;tip(jump?'SPIKE • APPROACH + JUMP':'SPIKE • ATTACK');}
-  else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);ballState.teamTouches.home=1;tip('BLOCK • CLOSE THE ANGLE')}else return}
+  else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){jumpPlayer(controlled,4.7);const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);ballState.teamTouches.home=1;tip('BLOCK • CLOSE THE ANGLE')}else return}
   else if(type==='dive'){const quality=skillQuality(controlled,'dive',.86)*(.7+timing*.3);const dir=controlled.userData.moveX||0;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x+dir*.8,-4.25,4.25);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z+.7,-4.35,-.3);controlled.userData.moveX=dir;controlled.userData.moveZ=controlled.userData.moveZ||0;launchTo(controlled.position.x+((Math.random()-.5)*(1-quality)*1.2),-2.2,2.0,4.8+quality*.9);ballState.targetX=controlled.position.x;ballState.targetZ=-2.2;tip(Math.abs(dir)>.35?'DIG • DIRECTIONAL SAVE':'DIG • KEEP THE RALLY ALIVE')}
   if(type!=='block')ballState.teamTouches.home++;ballState.lastTouch='home';ballState.side='home';ballState.lastAction=type;ballState.cooldown=.25;controlled.userData.action=type==='dive' ? .8 : .55;
 }
@@ -308,6 +308,19 @@ function aiUpdate(dt){
   if(ballState.active){if(aiBlock())return;if(aiTouch('home',homePlayers))return;if(aiTouch('away',awayPlayers))return;const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;const target=chooseDefenseTarget(defenders);if(target&&target!==controlled)target.userData.coverageX=THREE.MathUtils.clamp(ball.position.x,-4.1,4.1);if(defendingHome&&defensiveRead('home',homePlayers))return;if(!defendingHome&&defensiveRead('away',awayPlayers))return}
 }
 function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
+function netApproachAssist(){
+  if(!controlled||!ballState.active||rallyLocked)return;
+  const attackingAway=ball.position.z>.15&&ballState.lastTouch==='away';
+  if(!attackingAway)return;
+  const role=controlled.userData.position;
+  if(role!=='MB'&&role!=='OH'&&role!=='OPP')return;
+  const targetX=THREE.MathUtils.clamp(ball.position.x,-3.5,3.5);
+  if(controlled.position.z<-.9){
+    controlled.userData.moveX=THREE.MathUtils.clamp((targetX-controlled.position.x)*.8,-1,1);
+    controlled.userData.moveZ=.9;
+  }
+  if(ball.position.y>1.8&&ball.position.z<1.2&&Math.abs(controlled.position.x-targetX)<1.0)jumpPlayer(controlled,4.5);
+}
 function autoReceiveAssist(){
   if(!controlled||!ballState.active||rallyLocked)return;
   if(ball.position.z>=0)return;
@@ -329,7 +342,7 @@ function autoSetAssist(){
 }
 function physics(dt){
   if(!state.ready||paused)return;if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
-  aiUpdate(dt);defensivePositioning(dt);autoReceiveAssist();autoSetAssist();if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
+  aiUpdate(dt);defensivePositioning(dt);netApproachAssist();autoReceiveAssist();autoSetAssist();if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
   const netTop=2.43,ballRadius=.2;const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
   if(crossedCenter){const crossingY=ball.position.y;if(crossingY<=netTop+ballRadius){ball.position.z=prevZ<0?-(ballRadius+.025):(ballRadius+.025);ballState.v.z*=-.82;ballState.v.y=Math.min(ballState.v.y,1.8);ballState.cooldown=Math.max(ballState.cooldown,.18);ballState.side=prevZ<0?'home':'away';tip('NET CONTACT • PLAY THE NEXT BALL')}else{ballState.side=ball.position.z<0?'home':'away';ballState.teamTouches[ballState.side]=0;ballState.crossed=true;tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND')}}
   if(ball.position.y<.2){ball.position.y=.2;point(ballState.lastTouch==='home'?'away':'home');return}if(Math.abs(ball.position.z)>5.05||Math.abs(ball.position.x)>9.05){point(ball.position.z<0?'away':'home');return}
