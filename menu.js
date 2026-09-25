@@ -12,7 +12,7 @@ document.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('cl
 $('playerChip')?.addEventListener('click',openCareer);
 $('backToMenu').addEventListener('click',()=>{modeMenu.classList.add('hidden');mainMenu.classList.remove('hidden')});
 $('closeModal').addEventListener('click',()=>infoModal.classList.add('hidden'));$('modalPlay').addEventListener('click',()=>infoModal.classList.add('hidden'));$('settingsBtn').addEventListener('click',()=>showInfo('SETTINGS','Gameplay, audio, graphics quality and control customization will be added as the game systems expand.'));
-document.querySelectorAll('[data-mode]').forEach(card=>card.addEventListener('click',()=>{if(card.classList.contains('locked'))return;const mode=card.dataset.mode;if(mode==='training')showInfo('TRAINING','Training mode is being prepared. For now, the playable 3D court prototype launches from Real Match.');else showGame()}));
+document.querySelectorAll('[data-mode]').forEach(card=>card.addEventListener('click',()=>{if(card.classList.contains('locked'))return;const mode=card.dataset.mode;if(mode==='training')showInfo('TRAINING','Training mode is being prepared. For now, the playable 3D court prototype launches from Real Match.');else if(mode==='local')$('localModal')?.classList.remove('hidden');else showGame()}));
 function syncMenuProfile(){const s=window.VVCareer?.load?.();if(!s)return;const rank=window.VVCareer.rank(s.level);$('menuRank').textContent=rank;$('menuLevel').textContent='LEVEL '+s.level}
 syncMenuProfile();syncControlModeUI();
 gameUI.forEach(el=>el.classList.add('hidden'));
