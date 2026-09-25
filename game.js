@@ -109,13 +109,13 @@ function chooseAttackTarget(players,ballX){
   const pool=ready.length?ready:attackers;
   return pool.reduce((best,p)=>Math.abs(p.position.x-ballX)<Math.abs(best.position.x-ballX)?p:best,pool[0]);
 }
-function chooseSetterTarget(players){
+function chooseSetterTarget(players,defenders=[]){
   const attackers=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
   if(!attackers.length)return players[0];
   const usable=attackers.filter(p=>Math.abs(p.position.x-ball.position.x)<4.8);
   const pool=usable.length?usable:attackers;
   // Prefer an attacker who is already separating from the blockers, then vary between viable options.
-  const scored=pool.map(p=>({p,score:Math.abs(p.position.x-ball.position.x)*.35+Math.abs(p.position.z-p.userData.baseZ)*.15}));
+  const scored=pool.map(p=>{const nearestBlock=defenders.length?defenders.reduce((d,b)=>Math.min(d,Math.abs(p.position.x-b.position.x)),99):3;const readiness=Math.max(0,3.8-Math.abs(p.position.x-ball.position.x));const roleBonus=p.userData.position==='MB'?.28:0;return {p,score:Math.abs(p.position.x-ball.position.x)*.28+Math.abs(p.position.z-p.userData.baseZ)*.12-nearestBlock*.34-readiness*.08-roleBonus}});
   scored.sort((a,b)=>a.score-b.score);
   const top=scored.slice(0,Math.min(3,scored.length));
   return top[Math.floor(Math.random()*top.length)].p;
@@ -234,7 +234,7 @@ function aiRallyDecision(team,players){
   const profile=aiDifficultyProfile();
   if(touches===0)return {kind:'receive',player:chooseReceiver(players,ball.position.x)};
   if(touches===1){
-    const target=chooseSetterTarget(players);
+    const defenders=team==='home'?awayPlayers:homePlayers;const target=chooseSetterTarget(players,defenders);
     return {kind:'set',player:target};
   }
   if(touches===2){
