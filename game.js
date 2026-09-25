@@ -308,9 +308,28 @@ function aiUpdate(dt){
   if(ballState.active){if(aiBlock())return;if(aiTouch('home',homePlayers))return;if(aiTouch('away',awayPlayers))return;const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;const target=chooseDefenseTarget(defenders);if(target&&target!==controlled)target.userData.coverageX=THREE.MathUtils.clamp(ball.position.x,-4.1,4.1);if(defendingHome&&defensiveRead('home',homePlayers))return;if(!defendingHome&&defensiveRead('away',awayPlayers))return}
 }
 function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
+function autoReceiveAssist(){
+  if(!controlled||!ballState.active||rallyLocked)return;
+  if(ball.position.z>=0)return;
+  const dx=ball.position.x-controlled.position.x,dz=ball.position.z-controlled.position.z;
+  const dist=Math.hypot(dx,dz);
+  if(dist<1.45&&ball.position.y>.35&&ball.position.y<2.65&&ballState.teamTouches.home===0){
+    const dirX=THREE.MathUtils.clamp(dx*1.8,-1,1),dirZ=THREE.MathUtils.clamp(dz*1.2,-1,1);
+    controlled.userData.moveX=dirX;controlled.userData.moveZ=dirZ;
+  }
+}
+function autoSetAssist(){
+  if(!controlled||!ballState.active||rallyLocked)return;
+  if(ballState.teamTouches.home!==1||ball.position.z>=0)return;
+  const dx=ball.position.x-controlled.position.x,dz=ball.position.z-controlled.position.z;
+  if(Math.hypot(dx,dz)<1.35&&ball.position.y>1.25&&ball.position.y<3.7){
+    const setter=controlled.userData.position==='S'||controlled.userData.position==='SETTER';
+    if(setter)controlled.userData.moveX*=.65;
+  }
+}
 function physics(dt){
   if(!state.ready||paused)return;if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
-  aiUpdate(dt);defensivePositioning(dt);if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
+  aiUpdate(dt);defensivePositioning(dt);autoReceiveAssist();autoSetAssist();if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
   const netTop=2.43,ballRadius=.2;const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
   if(crossedCenter){const crossingY=ball.position.y;if(crossingY<=netTop+ballRadius){ball.position.z=prevZ<0?-(ballRadius+.025):(ballRadius+.025);ballState.v.z*=-.82;ballState.v.y=Math.min(ballState.v.y,1.8);ballState.cooldown=Math.max(ballState.cooldown,.18);ballState.side=prevZ<0?'home':'away';tip('NET CONTACT • PLAY THE NEXT BALL')}else{ballState.side=ball.position.z<0?'home':'away';ballState.teamTouches[ballState.side]=0;ballState.crossed=true;tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND')}}
   if(ball.position.y<.2){ball.position.y=.2;point(ballState.lastTouch==='home'?'away':'home');return}if(Math.abs(ball.position.z)>5.05||Math.abs(ball.position.x)>9.05){point(ball.position.z<0?'away':'home');return}
