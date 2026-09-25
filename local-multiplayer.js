@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 let localMode='host',pc=null,channel=null,roomCode='';
-const localState={connected:false,host:false,reconnects:0,lastDisconnect:0};
+const localState={connected:false,host:false,reconnects:0,lastDisconnect:0,slot:null,sessionReady:false,pingMs:0};
 
 function localLog(message){
   const el=$('localLog'); if(el) el.innerHTML=message;
@@ -32,7 +32,8 @@ function resetLocal(){
   channel=null;pc=null;roomCode=makeRoomCode();
   $('localRoomCode').textContent=roomCode;
   $('localSignal').value='';
-  localState.connected=false;
+  localState.connected=false;localState.host=false;localState.slot=null;localState.sessionReady=false;
+  netState.seq=0;netState.lastInputAt=0;netState.lastSnapshotAt=0;netState.lastPingAt=0;netState.lastPongAt=netNow();
   localStatus('READY • CHOOSE HOST OR JOIN');
   localLog('STEP 1 • Put both phones on the same Wi-Fi or hotspot.<br>STEP 2 • Host creates an offer and sends the data to the other phone.<br>STEP 3 • Joiner applies it, sends the answer back, then Host applies the answer.');
 }
@@ -49,7 +50,7 @@ function sendPacket(packet){
 function bindChannel(ch){
   channel=ch;
   channel.onopen=()=>{
-    localState.connected=true;
+    localState.connected=true;localState.sessionReady=false;netState.lastPongAt=netNow();
     localStatus('CONNECTED • PEER LINK ACTIVE',true);
     localLog('PEER CONNECTED • Direct data channel is active.<br>Next architecture step: synchronize player inputs and match state.');
     sendPacket({type:'hello',game:'VOLLEYVERSE',version:1,room:roomCode});
@@ -63,7 +64,9 @@ function bindChannel(ch){
       window.dispatchEvent(new CustomEvent('vv-local-packet',{detail:packet}));
       if(packet.type==='hello') localStatus('CONNECTED • PEER READY',true);
       if(packet.type==='ping'){sendPacket({type:'pong',t:Date.now()})}
-      if(packet.type==='pong') netState.lastPongAt=netNow();
+      if(packet.type==='pong'){const sent=Number(packet.t)||Date.now();netState.lastPongAt=netNow();localState.pingMs=Math.max(0,Date.now()-sent);localStatus('CONNECTED • '+localState.pingMs+' MS',true)}
+      if(packet.type==='session_assign'){localState.slot=Number(packet.slot)||1;localState.sessionReady=false;window.dispatchEvent(new CustomEvent('vv-local-packet',{detail:packet}))}
+      if(packet.type==='session_start'){localState.sessionReady=true;localStatus('MATCH READY • LOCAL SLOT '+(localState.slot??'?'),true);window.dispatchEvent(new CustomEvent('vv-local-packet',{detail:packet}))}
     }catch(err){}
   };
 }
@@ -155,14 +158,16 @@ function sendSnapshot(snapshot){
   return true;
 }
 function sendReady(){sendPacket({type:'ready',t:Date.now()})}
+function sendSessionStart(){if(localState.host&&localState.connected){localState.sessionReady=true;sendPacket({type:'session_start',t:Date.now()})}}
+function sendSessionAssign(slot){if(localState.host&&localState.connected){localState.slot=0;sendPacket({type:'session_assign',slot,t:Date.now()})}}
 function netHeartbeat(){
   if(!localState.connected)return;
   const now=netNow();
   if(now-netState.lastPingAt>1800){netState.lastPingAt=now;sendPacket({type:'ping',t:Date.now()})}
-  if(now-netState.lastPongAt>6500){localState.connected=false;localStatus('CONNECTION LOST • RECONNECT OR RESET TO CONTINUE');}
+  if(now-netState.lastPongAt>6500){localState.connected=false;localState.sessionReady=false;localStatus('CONNECTION LOST • RECONNECT OR RESET TO CONTINUE');}
 }
 
-window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,send:sendPacket,sendInput,sendSnapshot,sendReady,isHost:()=>localState.host,getStatus:()=>({...localState}),reset:resetLocal};
+window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,isSessionReady:()=>localState.sessionReady,send:sendPacket,sendInput,sendSnapshot,sendReady,sendSessionStart,sendSessionAssign,isHost:()=>localState.host,getStatus:()=>({...localState}),reset:resetLocal};
 
 $('localHostBtn')?.addEventListener('click',()=>setLocalMode('host'));
 $('localJoinBtn')?.addEventListener('click',()=>setLocalMode('join'));
