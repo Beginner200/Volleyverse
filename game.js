@@ -5,7 +5,7 @@ const wrap = $('canvasWrap');
 const state = { renderer:null, camera:null, scene:null, ready:false, running:false };
 const keys = {x:0,z:0};
 let homeScore=0, awayScore=0, homeSets=0, awaySets=0, setNumber=1, matchHomePoints=0;
-let servingTeam='home', controlledIndex=0, controlled=null, paused=false, rallyLocked=false;
+let servingTeam='home', controlledIndex=0, controlled=null, paused=false, rallyLocked=false;\nconst controlMode=()=>localStorage.getItem('volleyverseControlMode')||'team';
 let homePlayers=[], awayPlayers=[], ball=null;
 const COURT_LENGTH=18, COURT_WIDTH=9, HALF_LENGTH=9, HALF_WIDTH=4.5, ATTACK_LINE=3;
 const ballState={v:new THREE.Vector3(),active:false,lastTouch:'home',cooldown:0,touches:0,lastAction:'',side:'home',targetX:0,targetZ:0,teamTouches:{home:0,away:0},crossed:false};
@@ -22,7 +22,7 @@ function createScene(){
     state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0);
     state.renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'default',alpha:false});state.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.35));state.renderer.setSize(Math.max(innerWidth,1),Math.max(innerHeight,1),false);state.renderer.shadowMap.enabled=false;state.renderer.outputColorSpace=THREE.SRGBColorSpace;state.renderer.domElement.style.width='100%';state.renderer.domElement.style.height='100%';wrap.innerHTML='';wrap.appendChild(state.renderer.domElement);
     state.scene.add(new THREE.HemisphereLight(0xdff5ff,0x16304a,2.4));const key=new THREE.DirectionalLight(0xffffff,2.7);key.position.set(4,12,8);state.scene.add(key);const fill=new THREE.DirectionalLight(0x6ad8ff,1.5);fill.position.set(-8,6,-6);state.scene.add(fill);
-    buildCourt();buildTeams();buildBall();updateControlled();updateHUD();resetBall();state.ready=true;resize();if(!state.running){state.running=true;requestAnimationFrame(loop)}return true;
+    buildCourt();buildTeams();if(controlMode()==='lock'){const saved=Number(localStorage.getItem('volleyverseLockPlayer')||0);controlledIndex=THREE.MathUtils.clamp(saved,0,5)}updateControlled();updateHUD();resetBall();state.ready=true;resize();if(!state.running){state.running=true;requestAnimationFrame(loop)}return true;
   }catch(err){console.error('VOLLEYVERSE 3D initialization failed:',err);showError('Your browser could not create the 3D graphics. Try Chrome again after reloading.');return false}
 }
 function buildCourt(){
@@ -68,7 +68,7 @@ function action(type){
   else if(type==='dive'){controlled.position.z=THREE.MathUtils.clamp(controlled.position.z+.7,-4.35,-.3);launchTo(controlled.position.x,-2.2,2.0,5.2);ballState.targetX=controlled.position.x;ballState.targetZ=-2.2;tip('DIG • KEEP THE RALLY ALIVE')}
   if(type!=='block')ballState.teamTouches.home++;ballState.lastTouch='home';ballState.side='home';ballState.lastAction=type;ballState.cooldown=.25;controlled.userData.action=type==='dive'?.8:.55;
 }
-function switchPlayer(){if(rallyLocked)return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
+function switchPlayer(){if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
 function roleTarget(p,home,targetX,targetZ){
   const baseX=p.userData.baseX,baseZ=p.userData.baseZ,role=p.userData.position;const side=home?-1:1;let tx=baseX,tz=baseZ;
   // Advanced 6v6 positioning: players keep role lanes and cover the likely attack zone
