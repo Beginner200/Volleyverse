@@ -273,6 +273,33 @@ function aiDifficultyProfile(){
   const table={beginner:{reaction:.72,accuracy:.55,block:.35},easy:{reaction:.86,accuracy:.68,block:.48},medium:{reaction:1,accuracy:.78,block:.62},hard:{reaction:1.12,accuracy:.88,block:.76},master:{reaction:1.22,accuracy:.93,block:.86},grandmaster:{reaction:1.3,accuracy:.96,block:.92},champion:{reaction:1.38,accuracy:.98,block:.97}};
   return table[mode]||table.medium;
 }
+function defensivePositioning(dt){
+  if(!state.ready||rallyLocked)return;
+  const targets=ballState.active&&ball.position.z<0?ball.position:({x:0,z:-2.5});
+  homePlayers.forEach((p,i)=>{
+    if(p===controlled)return;
+    const role=p.userData.position;
+    let tx=p.userData.baseX,tz=p.userData.baseZ;
+    if(ballState.active&&ball.position.z<0){
+      const spread=role==='L'?-.9:role==='R'?.9:role==='MB'?0:(i%2?-1.45:1.45);
+      tx=THREE.MathUtils.clamp(ball.position.x*.42+spread,-4.1,4.1);
+      tz=THREE.MathUtils.clamp(-2.5+ball.position.z*.18,-4.15,-.65);
+    }else{
+      tx=THREE.MathUtils.clamp(p.userData.baseX+(targets.x*.12),-4.1,4.1);
+      tz=p.userData.baseZ;
+    }
+    p.userData.aiTargetX=tx;p.userData.aiTargetZ=tz;
+    const dx=tx-p.position.x,dz=tz-p.position.z;
+    const d=Math.hypot(dx,dz);
+    if(d>.08){
+      const step=Math.min(d,(p.userData.speed||4)*dt*.7);
+      p.position.x+=dx/d*step;p.position.z+=dz/d*step;
+      p.userData.moveX=dx/d;p.userData.moveZ=dz/d;
+    }else{
+      p.userData.moveX*=.8;p.userData.moveZ*=.8;
+    }
+  });
+}
 function aiUpdate(dt){
   if(ballState.active)aiCoverage();
   const targetX=ballState.active?ball.position.x:0,targetZ=ballState.active?ball.position.z:0;
@@ -283,7 +310,7 @@ function aiUpdate(dt){
 function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
 function physics(dt){
   if(!state.ready||paused)return;if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
-  aiUpdate(dt);if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
+  aiUpdate(dt);defensivePositioning(dt);if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
   const netTop=2.43,ballRadius=.2;const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
   if(crossedCenter){const crossingY=ball.position.y;if(crossingY<=netTop+ballRadius){ball.position.z=prevZ<0?-(ballRadius+.025):(ballRadius+.025);ballState.v.z*=-.82;ballState.v.y=Math.min(ballState.v.y,1.8);ballState.cooldown=Math.max(ballState.cooldown,.18);ballState.side=prevZ<0?'home':'away';tip('NET CONTACT • PLAY THE NEXT BALL')}else{ballState.side=ball.position.z<0?'home':'away';ballState.teamTouches[ballState.side]=0;ballState.crossed=true;tip(ballState.side==='home'?'BALL TO YOU • BUILD THE RALLY':'BALL TO RIVALS • DEFEND')}}
   if(ball.position.y<.2){ball.position.y=.2;point(ballState.lastTouch==='home'?'away':'home');return}if(Math.abs(ball.position.z)>5.05||Math.abs(ball.position.x)>9.05){point(ball.position.z<0?'away':'home');return}
