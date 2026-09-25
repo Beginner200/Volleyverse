@@ -86,7 +86,7 @@ function action(type){
   else if(type==='spike'){const quality=skillQuality(controlled,'spike',.92)*(.65+timing*.35);targetX=THREE.MathUtils.clamp(controlled.position.x+dx*.55,-4.0,4.0);const targetZ=THREE.MathUtils.clamp(4.0+Math.abs(controlled.position.z)*.02,3.65,4.2);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.5),targetZ,.3,7.4*(.86+quality*.14));ballState.targetX=targetX;ballState.targetZ=targetZ;tip('SPIKE • THIRD TOUCH → ATTACK')}
   else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);ballState.teamTouches.home=1;tip('BLOCK • CLOSE THE ANGLE')}else return}
   else if(type==='dive'){const quality=skillQuality(controlled,'dive',.86)*(.7+timing*.3);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z+.7,-4.35,-.3);launchTo(controlled.position.x+((Math.random()-.5)*(1-quality)*1.2),-2.2,2.0,4.8+quality*.9);ballState.targetX=controlled.position.x;ballState.targetZ=-2.2;tip('DIG • KEEP THE RALLY ALIVE')}
-  if(type!=='block')ballState.teamTouches.home++;ballState.lastTouch='home';ballState.side='home';ballState.lastAction=type;ballState.cooldown=.25;controlled.userData.action=type==='dive'?.8:.55;
+  if(type!=='block')ballState.teamTouches.home++;ballState.lastTouch='home';ballState.side='home';ballState.lastAction=type;ballState.cooldown=.25;controlled.userData.action=type==='dive' ? .8 : .55;
 }
 function switchPlayer(){if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
 function roleTarget(p,home,targetX,targetZ){
@@ -117,7 +117,7 @@ function moveAIPlayer(p,dt,targetX,targetZ,home){
   const coverageRole=['L','LIBERO','OH','OPP'].includes(role);
   if(defending&&coverageRole){t.x=THREE.MathUtils.clamp(t.x*.62+p.userData.coverageX*.38,-4.15,4.15)}
   p.userData.aiTargetX=t.x;p.userData.aiTargetZ=t.z;
-  const dx=t.x-p.position.x,dz=t.z-p.position.z,dist=Math.hypot(dx,dz);const profile=aiDifficultyProfile();const max=p.userData.speed*dt*(home?.82:1.15)*profile.reaction;
+  const dx=t.x-p.position.x,dz=t.z-p.position.z,dist=Math.hypot(dx,dz);const profile=aiDifficultyProfile();const max=p.userData.speed*dt*(home ? .82 : 1.15)*profile.reaction;
   if(dist>.04){const step=Math.min(dist,max);p.position.x+=dx/dist*step;p.position.z+=dz/dist*step;p.userData.moveX=dx/dist;p.userData.moveZ=dz/dist}else{p.userData.moveX=0;p.userData.moveZ=0}
   p.position.x=THREE.MathUtils.clamp(p.position.x,-4.25,4.25);p.position.z=home?THREE.MathUtils.clamp(p.position.z,-4.35,-.25):THREE.MathUtils.clamp(p.position.z,.25,4.35);
 }
@@ -135,7 +135,7 @@ function chooseSetterTarget(players,defenders=[]){
   const usable=attackers.filter(p=>Math.abs(p.position.x-ball.position.x)<4.8);
   const pool=usable.length?usable:attackers;
   // Prefer an attacker who is already separating from the blockers, then vary between viable options.
-  const scored=pool.map(p=>{const nearestBlock=defenders.length?defenders.reduce((d,b)=>Math.min(d,Math.abs(p.position.x-b.position.x)),99):3;const readiness=Math.max(0,3.8-Math.abs(p.position.x-ball.position.x));const roleBonus=p.userData.position==='MB'?.28:0;return {p,score:Math.abs(p.position.x-ball.position.x)*.28+Math.abs(p.position.z-p.userData.baseZ)*.12-nearestBlock*.34-readiness*.08-roleBonus}});
+  const scored=pool.map(p=>{const nearestBlock=defenders.length?defenders.reduce((d,b)=>Math.min(d,Math.abs(p.position.x-b.position.x)),99):3;const readiness=Math.max(0,3.8-Math.abs(p.position.x-ball.position.x));const roleBonus=p.userData.position==='MB' ? .28 : 0;return {p,score:Math.abs(p.position.x-ball.position.x)*.28+Math.abs(p.position.z-p.userData.baseZ)*.12-nearestBlock*.34-readiness*.08-roleBonus}});
   scored.sort((a,b)=>a.score-b.score);
   const top=scored.slice(0,Math.min(3,scored.length));
   return top[Math.floor(Math.random()*top.length)].p;
@@ -166,10 +166,10 @@ function chooseDefenseTarget(players){
   return list.reduce((best,p)=>{
     const d=Math.hypot(p.position.x-predictedX,p.position.z-ball.position.z);
     const role=p.userData.position;
-    const bonus=(role==='L'||role==='LIBERO')?.55:(role==='OH'||role==='OPP')?.22:0;
+    const bonus=(role==='L'||role==='LIBERO') ? .55 : (role==='OH'||role==='OPP') ? .22 : 0;
     const bd=Math.hypot(best.position.x-predictedX,best.position.z-ball.position.z);
     const br=best.userData.position;
-    const bestBonus=(br==='L'||br==='LIBERO')?.55:(br==='OH'||br==='OPP')?.22;
+    const bestBonus=(br==='L'||br==='LIBERO') ? .55 : (br==='OH'||br==='OPP') ? .22 : 0;
     return d-bonus<bd-bestBonus?p:best;
   },list[0]);
 }
@@ -241,7 +241,7 @@ function aiBlock(){
   const useTriple=useDouble&&partners.length>1&&profile.block>.78&&Math.random()<.28;
   if(useTriple){const third=partners[1];third.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?1.05:-1.05),-4.15,4.15);third.userData.action=.62}
   // Block angle: a coordinated wall sends the ball back toward the attacking side with a controlled lift.
-  ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble?.1:0)+(useTriple?.06:0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble?.42:.35));
+  ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble ? .1 : 0)+(useTriple ? .06 : 0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble ? .42 : .35));
   ballState.lastTouch=attackingHome?'away':'home';ballState.side=ballState.lastTouch;ballState.teamTouches[ballState.lastTouch]=0;ballState.cooldown=.5;
   tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');return true;
 }
