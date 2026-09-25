@@ -153,6 +153,15 @@ function chooseDefenseTarget(players){
     return d-bonus<bd-bestBonus?p:best;
   },list[0]);
 }
+function transitionAfterDefense(team,players){
+  const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];
+  const attackers=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
+  if(!setter||!attackers.length)return;
+  const ready=attackers.reduce((best,p)=>Math.abs(p.position.x-ball.position.x)<Math.abs(best.position.x-ball.position.x)?p:best,attackers[0]);
+  setter.userData.aiTargetX=THREE.MathUtils.clamp(ball.position.x*.2,-3,3);
+  setter.userData.aiTargetZ=team==='home'?-2.55:2.55;
+  ready.userData.coverageX=THREE.MathUtils.clamp(ball.position.x*.7,-4.1,4.1);
+}
 function defensiveRead(team,players){
   if(!ballState.active||ballState.cooldown>0)return false;
   const home=team==='home';
@@ -172,7 +181,7 @@ function defensiveRead(team,players){
   launchTo(setter.position.x,setter.position.z,2.15,5.7);
   ballState.teamTouches[team]=Math.min(1,ballState.teamTouches[team]+1);
   ballState.lastTouch=team;ballState.side=team;ballState.lastAction='dig';ballState.cooldown=.42;
-  target.userData.action=.65;target.userData.coverageX=predictedX;
+  target.userData.action=.65;target.userData.coverageX=predictedX;transitionAfterDefense(team,players);
   tip((home?'TEAM':'RIVALS')+' • DIG → SETTER');
   return true;
 }
@@ -201,9 +210,20 @@ function aiCoverage(){
 function aiBlock(){
   const profile=aiDifficultyProfile();if(!ballState.active||ballState.cooldown>0||ball.position.y<1.55)return false;
   const attackingHome=ballState.lastTouch==='home'&&ball.position.z>-1.15;const attackingAway=ballState.lastTouch==='away'&&ball.position.z<1.15;if(!attackingHome&&!attackingAway)return false;
-  const defenders=attackingHome?awayPlayers:homePlayers.filter(p=>p!==controlled);const blockers=defenders.filter(p=>p.userData.position==='MB'||p.userData.position==='OPP'||p.userData.position==='OH');if(!blockers.length)return false;
-  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.22,-4.15,4.15);const blocker=blockers.reduce((a,p)=>Math.abs(p.position.x-predictedX)<Math.abs(a.position.x-predictedX)?p:a,blockers[0]);
-  if(Math.abs(blocker.position.x-predictedX)>1.45||Math.random()>profile.block)return false;blocker.position.x=predictedX;blocker.userData.action=.8;const partner=blockers.find(p=>p!==blocker&&Math.abs(p.position.x-predictedX)<2.8);if(partner){partner.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?-1.05:1.05),-4.15,4.15);partner.userData.action=.65}ballState.v.z*=-.62;ballState.v.y=Math.max(3.2,ballState.v.y*.35);ballState.lastTouch=attackingHome?'away':'home';ballState.side=ballState.lastTouch;ballState.teamTouches[ballState.lastTouch]=0;ballState.cooldown=.5;tip('BLOCK! • '+(attackingHome?'RIVALS':'YOUR TEAM')+' GET A TOUCH');return true;
+  const defenders=attackingHome?awayPlayers:homePlayers.filter(p=>p!==controlled);const blockers=defenders.filter(p=>['MB','OPP','OH'].includes(p.userData.position));if(!blockers.length)return false;
+  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.22,-4.15,4.15);
+  const primary=blockers.reduce((a,p)=>Math.abs(p.position.x-predictedX)<Math.abs(a.position.x-predictedX)?p:a,blockers[0]);
+  if(Math.abs(primary.position.x-predictedX)>1.45||Math.random()>profile.block)return false;
+  primary.position.x=predictedX;primary.userData.action=.8;
+  const partners=blockers.filter(p=>p!==primary&&Math.abs(p.position.x-predictedX)<3.4).sort((a,b)=>Math.abs(a.position.x-predictedX)-Math.abs(b.position.x-predictedX));
+  const useDouble=partners.length&&Math.random()<(0.35+profile.block*.5);
+  if(useDouble){const partner=partners[0];const side=predictedX>=0?-1:1;partner.position.x=THREE.MathUtils.clamp(predictedX+side*.95,-4.15,4.15);partner.userData.action=.72}
+  const useTriple=useDouble&&partners.length>1&&profile.block>.78&&Math.random()<.28;
+  if(useTriple){const third=partners[1];third.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?1.05:-1.05),-4.15,4.15);third.userData.action=.62}
+  // Block angle: a coordinated wall sends the ball back toward the attacking side with a controlled lift.
+  ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble?.1:0)+(useTriple?.06:0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble?.42:.35));
+  ballState.lastTouch=attackingHome?'away':'home';ballState.side=ballState.lastTouch;ballState.teamTouches[ballState.lastTouch]=0;ballState.cooldown=.5;
+  tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');return true;
 }
 function aiRallyDecision(team,players){
   const touches=ballState.teamTouches[team];
