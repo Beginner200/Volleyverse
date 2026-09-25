@@ -1,0 +1,13 @@
+(()=>{
+const KEY='volleyverseReplay';const defaults={enabled:true,max:300,events:[],matchId:null,started:0};
+const load=()=>{try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return {...defaults}}};const save=s=>localStorage.setItem(KEY,JSON.stringify(s));let live=null;
+const start=(meta={})=>{live={...defaults,matchId:Date.now(),started:Date.now(),events:[],meta};return live};
+const record=(type,data={})=>{if(!live)return;const e={t:Date.now()-live.started,type,...data};live.events.push(e);if(live.events.length>live.max)live.events.shift();if(['point','spike','block','dive','ace'].includes(type))live.events[live.events.length-1].highlight=true};
+const stop=()=>{if(!live)return null;const out={...live,events:[...live.events],ended:Date.now()};save(out);const result=live;live=null;return result};
+const highlights=()=>{const s=load();return (s.events||[]).filter(e=>e.highlight)};
+const clear=()=>{live=null;localStorage.removeItem(KEY)};
+const exportData=()=>JSON.stringify(load());
+const open=()=>{let m=document.getElementById('replayModal');if(!m){m=document.createElement('div');m.id='replayModal';m.className='modal';m.innerHTML='<div class="modal-panel replay-panel"><button class="modal-close" id="replayClose">×</button><span class="eyebrow">REPLAY & HIGHLIGHTS</span><h2>MATCH REPLAY</h2><div id="replayStatus">NO SAVED REPLAY</div><div id="highlightList" class="highlight-list"></div><div class="replay-actions"><button class="primary" id="replayDemo">RECORD DEMO HIGHLIGHT</button><button class="glass" id="replayClear">CLEAR REPLAY</button></div><p class="replay-note">Prototype replay foundation. Rally event recording and highlight markers are stored locally and ready for future camera playback.</p></div></div>';document.body.appendChild(m);document.getElementById('replayClose').onclick=()=>m.classList.add('hidden');document.getElementById('replayDemo').onclick=()=>{if(!live)start({mode:'demo'});record('spike',{player:'ASTRA',speed:92});record('block',{player:'REX',quality:95});stop();render()};document.getElementById('replayClear').onclick=()=>{clear();render()}}render();m.classList.remove('hidden')};
+const render=()=>{const s=load(),status=document.getElementById('replayStatus'),list=document.getElementById('highlightList');if(status)status.textContent=s.matchId?'REPLAY SAVED • '+(s.events||[]).length+' EVENTS':'NO SAVED REPLAY';if(list)list.innerHTML=highlights().slice(-12).reverse().map(e=>'<div class="highlight-row"><b>'+String(e.type).toUpperCase()+'</b><span>'+Math.round(e.t/1000)+'s • '+(e.player||'PLAY')+'</span></div>').join('')};
+window.VVReplay={load,save,start,record,stop,highlights,clear,exportData,open,render};
+})();
