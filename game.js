@@ -57,12 +57,39 @@ function createPlayer(color,name,x,z,home,position,stats={}){
   const ring=new THREE.Mesh(new THREE.RingGeometry(.48,.57,32),new THREE.MeshBasicMaterial({color:0x54e7ff,transparent:true,opacity:.9,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;g.add(ring);const arrow=new THREE.Mesh(new THREE.ConeGeometry(.11,.28,4),new THREE.MeshBasicMaterial({color:0x54e7ff}));arrow.rotation.x=Math.PI;arrow.position.y=2.45;g.add(arrow);
   g.userData={name,home,position,stats,baseX:x,baseZ:z,speed:3.9+(stats.speed||0)*.012,arms,legs,ring,arrow,action:0,cooldown:0,moveX:0,moveZ:0,phase:Math.random()*Math.PI*2,stance:0,jumpY:0,jumpV:0,aiTargetX:x,aiTargetZ:z,coverageX:x};state.scene.add(g);return g;
 }
+function matchStats(character){
+  if(!character)return{};
+  if(character.id&&window.VVProgression?.effectiveStats)return window.VVProgression.effectiveStats(character.id);
+  return {...(character.stats||{})};
+}
 function buildTeams(){
-  const roster=window.VVCharacters?.roster||[];const defaults=['astra','kairo','nova','rex','mira','zen'];let saved=null;try{saved=JSON.parse(localStorage.getItem('volleyverseRoster')||'null')}catch(e){}const picked=(saved||defaults).map(id=>roster.find(c=>c.id===id)).filter(Boolean);const squad=picked.length===6?picked:defaults.map(id=>roster.find(c=>c.id===id)).filter(Boolean);
-  const fallback=[{id:'a',name:'Astra',position:'OH',color:0x36bfff,stats:{}},{id:'b',name:'Kairo',position:'S',color:0x36bfff,stats:{}},{id:'c',name:'Nova',position:'OPP',color:0x36bfff,stats:{}},{id:'d',name:'Rex',position:'MB',color:0x36bfff,stats:{}},{id:'e',name:'Mira',position:'MB',color:0x36bfff,stats:{}},{id:'f',name:'Zen',position:'L',color:0x36bfff,stats:{}}];
-  const data=squad.length===6?squad:fallback;const pos=[[-5.8,-3.45],[-2.2,-3.45],[2.2,-3.45],[-5.8,-1.15],[-2.2,-1.15],[2.2,-1.15]];
-  homePlayers=data.map((c,i)=>createPlayer(c.color||0x36bfff,c.name||('Player '+(i+1)),pos[i][0],pos[i][1],true,c.position||'OH',c.stats||{}));
-  const away=[['Vex','OH',0xff4f79],['Luna','S',0xff4f79],['Orion','OPP',0xff4f79],['Kai','MB',0xff8847],['Sora','MB',0xff8847],['Axel','L',0xff8847]];awayPlayers=away.map((c,i)=>createPlayer(c[2],c[0],pos[i][0],-pos[i][1],false,c[1],{}));controlled=homePlayers[0];
+  const roster=window.VVCharacters?.roster||[];
+  const defaults=['astra','kairo','nova','rex','mira','zen'];
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('volleyverseRoster')||'null')}catch(e){}
+  const picked=(saved||defaults).map(id=>roster.find(c=>c.id===id)).filter(Boolean);
+  const squad=picked.length===6?picked:defaults.map(id=>roster.find(c=>c.id===id)).filter(Boolean);
+  const fallback=[{id:'astra',name:'Astra',position:'OH',color:0x36bfff,stats:{}},{id:'kairo',name:'Kairo',position:'S',color:0x36bfff,stats:{}},{id:'nova',name:'Nova',position:'OPP',color:0x36bfff,stats:{}},{id:'rex',name:'Rex',position:'MB',color:0x36bfff,stats:{}},{id:'mira',name:'Mira',position:'MB',color:0x36bfff,stats:{}},{id:'zen',name:'Zen',position:'L',color:0x36bfff,stats:{}}];
+  const data=squad.length===6?squad:fallback;
+  const pos=[[-5.8,-3.45],[-2.2,-3.45],[2.2,-3.45],[-5.8,-1.15],[-2.2,-1.15],[2.2,-1.15]];
+  homePlayers=data.map((ch,i)=>{
+    const p=createPlayer(ch.color||0x36bfff,ch.name||('Player '+(i+1)),pos[i][0],pos[i][1],true,ch.position||'OH',matchStats(ch));
+    p.userData.characterId=ch.id||null;
+    p.userData.characterStyle=ch.style||'';
+    p.userData.characterRarity=ch.rarity||'Common';
+    return p;
+  });
+  const awayIds=['vex','luna','orion','kai','sora','axel'];
+  const awayData=awayIds.map(id=>roster.find(c=>c.id===id)).filter(Boolean);
+  const awayFallback=[['Vex','OH',0xff4f79],['Luna','S',0xff4f79],['Orion','OPP',0xff4f79],['Kai','MB',0xff8847],['Sora','MB',0xff8847],['Axel','L',0xff8847]];
+  awayPlayers=(awayData.length===6?awayData:awayFallback).map((ch,i)=>{
+    const name=ch.name||ch[0],position=ch.position||ch[1],color=ch.color||ch[2],stats=ch.stats||{};
+    const p=createPlayer(color,name,pos[i][0],-pos[i][1],false,position,stats);
+    p.userData.characterId=ch.id||null;
+    p.userData.characterStyle=ch.style||'';
+    p.userData.characterRarity=ch.rarity||'Common';
+    return p;
+  });
+  controlled=homePlayers[0];
 }
 function buildBall(){ball=new THREE.Mesh(new THREE.SphereGeometry(.2,20,14),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.25}));state.scene.add(ball)}
 function applyRemoteInput(input){
@@ -78,7 +105,25 @@ function updateRemotePlayer(dt){
   if(mag>.05&&!rallyLocked){p.position.x=THREE.MathUtils.clamp(p.position.x+remoteKeys.x*speed*dt,-4.25,4.25);p.position.z=THREE.MathUtils.clamp(p.position.z+remoteKeys.z*speed*dt,-4.35,-.25)}
 }
 function updateControlled(){homePlayers.forEach((p,i)=>{p.userData.ring.visible=i===controlledIndex;p.userData.arrow.visible=i===controlledIndex});controlled=homePlayers[controlledIndex]||homePlayers[0]}
-function resetPlayers(){[...homePlayers,...awayPlayers].forEach((p,i)=>{p.userData.characterId=window.VVCharacters?.roster?.[i%6]?.id||null});[...homePlayers,...awayPlayers].forEach(p=>{p.userData.remoteControlled=false;p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX})}
+function resetPlayers(){
+  const roster=window.VVCharacters?.roster||[];
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('volleyverseRoster')||'null')}catch(e){}
+  const homeIds=(Array.isArray(saved)&&saved.length===6?saved:['astra','kairo','nova','rex','mira','zen']);
+  const awayIds=['vex','luna','orion','kai','sora','axel'];
+  [...homePlayers,...awayPlayers].forEach((p,i)=>{
+    const id=i<6?homeIds[i]:awayIds[i-6],ch=roster.find(x=>x.id===id);
+    if(ch){
+      p.userData.characterId=ch.id;
+      p.userData.name=ch.name;
+      p.userData.position=ch.position;
+      p.userData.stats=matchStats(ch);
+      p.userData.characterStyle=ch.style||'';
+      p.userData.characterRarity=ch.rarity||'Common';
+      p.userData.speed=3.9+(p.userData.stats.speed||0)*.012;
+    }
+    p.userData.remoteControlled=false;p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX;
+  });
+}
 function resetBall(){if(!ball||!controlled)return;ballState.active=false;ballState.v.set(0,0,0);ballState.lastTouch=servingTeam;ballState.cooldown=0;ballState.touches=0;ballState.lastAction='serve';ballState.side=servingTeam;ballState.targetX=controlled.position.x;ballState.targetZ=servingTeam==='home'?-2.5:2.5;ballState.teamTouches={home:0,away:0};ballState.crossed=false;ball.position.set(servingTeam==='home'?controlled.position.x:0,1.95,servingTeam==='home'?-4.15:4.15);rallyLocked=false;if(servingTeam==='home'){tip('READY • SERVE TO START THE RALLY');setTimeout(()=>{if(state.ready&&!ballState.active&&!rallyLocked&&servingTeam==='home')serve()},650)}else{tip('RIVALS SERVING • RECEIVE THE BALL');setTimeout(aiServe,450)}}
 function aiServe(){if(!state.ready||servingTeam!=='away'||ballState.active||rallyLocked)return;const p=awayPlayers[1];const targetX=THREE.MathUtils.clamp((Math.random()-.5)*7.2,-3.6,3.6);ball.position.set(p.position.x,1.95,4.15);const dx=targetX-ball.position.x;ballState.v.set(THREE.MathUtils.clamp(dx*.22,-1.25,1.25),5.8,-7.2);ballState.active=true;ballState.lastTouch='away';ballState.side='away';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:0,away:1};p.userData.action=.55;tip('RIVALS SERVE • RECEIVE THE BALL')}
 function serve(){if(!state.ready||ballState.active||rallyLocked||servingTeam!=='home')return;ball.position.set(controlled.position.x,1.95,-4.15);ballState.v.set(THREE.MathUtils.clamp(controlled.position.x*.06,-.65,.65),5.8,7.2);ballState.active=true;ballState.lastTouch='home';ballState.side='home';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:1,away:0};controlled.userData.action=.55;tip('SERVE IN PLAY • MOVE INTO POSITION')}
