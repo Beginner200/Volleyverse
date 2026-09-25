@@ -53,6 +53,7 @@ function bindChannel(ch){
     localStatus('CONNECTED • PEER LINK ACTIVE',true);
     localLog('PEER CONNECTED • Direct data channel is active.<br>Next architecture step: synchronize player inputs and match state.');
     sendPacket({type:'hello',game:'VOLLEYVERSE',version:1,room:roomCode});
+    sendReady();
   };
   channel.onclose=()=>{localState.connected=false;localStatus('DISCONNECTED • ROOM LINK CLOSED')};
   channel.onerror=()=>localStatus('CONNECTION ERROR • RESET AND TRY AGAIN');
