@@ -68,7 +68,7 @@ function buildBall(){ball=new THREE.Mesh(new THREE.SphereGeometry(.2,20,14),new 
 function applyRemoteInput(input){
   if(!localConnected()||!localHost())return;
   if(input?.kind==='move'){remoteKeys.x=THREE.MathUtils.clamp(Number(input.x)||0,-1,1);remoteKeys.z=THREE.MathUtils.clamp(Number(input.z)||0,-1,1)}
-  if(input?.kind==='switch'){remotePlayerIndex=(remotePlayerIndex+1)%homePlayers.length}
+  if(input?.kind==='switch'){homePlayers[remotePlayerIndex].userData.remoteControlled=false;remotePlayerIndex=(remotePlayerIndex+1)%homePlayers.length;homePlayers[remotePlayerIndex].userData.remoteControlled=true}
   if(input?.kind==='action'&&input.type){const old=controlledIndex;const oldControlled=controlled;controlledIndex=THREE.MathUtils.clamp(remotePlayerIndex,0,5);updateControlled();action(input.type);controlledIndex=old;controlled=oldControlled;updateControlled()}
 }
 function updateRemotePlayer(dt){
@@ -78,7 +78,7 @@ function updateRemotePlayer(dt){
   if(mag>.05&&!rallyLocked){p.position.x=THREE.MathUtils.clamp(p.position.x+remoteKeys.x*speed*dt,-4.25,4.25);p.position.z=THREE.MathUtils.clamp(p.position.z+remoteKeys.z*speed*dt,-4.35,-.25)}
 }
 function updateControlled(){homePlayers.forEach((p,i)=>{p.userData.ring.visible=i===controlledIndex;p.userData.arrow.visible=i===controlledIndex});controlled=homePlayers[controlledIndex]||homePlayers[0]}
-function resetPlayers(){[...homePlayers,...awayPlayers].forEach(p=>{p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX})}
+function resetPlayers(){[...homePlayers,...awayPlayers].forEach(p=>{p.userData.remoteControlled=false;p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX})}
 function resetBall(){if(!ball||!controlled)return;ballState.active=false;ballState.v.set(0,0,0);ballState.lastTouch=servingTeam;ballState.cooldown=0;ballState.touches=0;ballState.lastAction='serve';ballState.side=servingTeam;ballState.targetX=controlled.position.x;ballState.targetZ=servingTeam==='home'?-2.5:2.5;ballState.teamTouches={home:0,away:0};ballState.crossed=false;ball.position.set(servingTeam==='home'?controlled.position.x:0,1.95,servingTeam==='home'?-4.15:4.15);rallyLocked=false;if(servingTeam==='home'){tip('READY • SERVE TO START THE RALLY');setTimeout(()=>{if(state.ready&&!ballState.active&&!rallyLocked&&servingTeam==='home')serve()},650)}else{tip('RIVALS SERVING • RECEIVE THE BALL');setTimeout(aiServe,450)}}
 function aiServe(){if(!state.ready||servingTeam!=='away'||ballState.active||rallyLocked)return;const p=awayPlayers[1];const targetX=THREE.MathUtils.clamp((Math.random()-.5)*7.2,-3.6,3.6);ball.position.set(p.position.x,1.95,4.15);const dx=targetX-ball.position.x;ballState.v.set(THREE.MathUtils.clamp(dx*.22,-1.25,1.25),5.8,-7.2);ballState.active=true;ballState.lastTouch='away';ballState.side='away';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:0,away:1};p.userData.action=.55;tip('RIVALS SERVE • RECEIVE THE BALL')}
 function serve(){if(!state.ready||ballState.active||rallyLocked||servingTeam!=='home')return;ball.position.set(controlled.position.x,1.95,-4.15);ballState.v.set(THREE.MathUtils.clamp(controlled.position.x*.06,-.65,.65),5.8,7.2);ballState.active=true;ballState.lastTouch='home';ballState.side='home';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:1,away:0};controlled.userData.action=.55;tip('SERVE IN PLAY • MOVE INTO POSITION')}
@@ -271,7 +271,7 @@ function aiCoverage(){
   const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;
   const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.32,-4.15,4.15);
   defenders.forEach(p=>{
-    if(p===controlled)return;
+    if(p===controlled||p.userData.remoteControlled)return;
     const role=p.userData.position;
     if(['L','LIBERO','OH','OPP'].includes(role)){
       p.userData.coverageX=THREE.MathUtils.clamp((p.userData.coverageX*.55)+(predictedX*.45),-4.1,4.1);
@@ -406,7 +406,7 @@ $('playBtn')?.addEventListener('pointerdown',()=>{if($('playBtn').textContent===
 const controls=$('controls'),joy=$('joystick'),stick=$('stick');let joystickActive=false,joystickPointerId=null;
 function setJoystickFromPoint(clientX,clientY){if(!joy)return;const r=joy.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;let x=clientX-cx,y=clientY-cy;const max=Math.max(r.width*.32,1),len=Math.hypot(x,y);if(len>max){x*=max/len;y*=max/len}stick.style.transform=`translate(${x}px,${y}px)`;keys.x=x/max;keys.z=y/max}
 function joyStart(e){if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();joystickActive=true;joystickPointerId=e.pointerId;controls?.setPointerCapture?.(e.pointerId);setJoystickFromPoint(e.clientX,e.clientY);if(localConnected()&&!localHost())window.VVLocalMultiplayer.sendInput({kind:'move',x:keys.x,z:keys.z})}
-function joyMove(e){if(!joystickActive||e.pointerId!==joystickPointerId)return;e.preventDefault();setJoystickFromPoint(e.clientX,e.clientY)}
+function joyMove(e){if(!joystickActive||e.pointerId!==joystickPointerId)return;e.preventDefault();setJoystickFromPoint(e.clientX,e.clientY);if(localConnected()&&!localHost())window.VVLocalMultiplayer.sendInput({kind:'move',x:keys.x,z:keys.z})}
 function joyEnd(e){if(joystickPointerId!==null&&e?.pointerId!==undefined&&e.pointerId!==joystickPointerId)return;joystickActive=false;joystickPointerId=null;stick.style.transform='translate(0,0)';keys.x=keys.z=0;if(localConnected()&&!localHost())window.VVLocalMultiplayer.sendInput({kind:'move',x:0,z:0})}
 controls?.addEventListener('pointerdown',e=>{if(e.target.closest('.action'))return;const half=innerWidth*.52;if(e.clientX<=half)joyStart(e)},{passive:false});controls?.addEventListener('pointermove',joyMove,{passive:false});controls?.addEventListener('pointerup',joyEnd,{passive:false});controls?.addEventListener('pointercancel',joyEnd,{passive:false});controls?.addEventListener('lostpointercapture',joyEnd,{passive:false});
 window.addEventListener('resize',resize);const observer=new MutationObserver(()=>{if(!state.ready&&!wrap.classList.contains('hidden'))createScene()});observer.observe(wrap,{attributes:true,attributeFilter:['class']});if(!wrap.classList.contains('hidden'))createScene();
