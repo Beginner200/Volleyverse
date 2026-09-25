@@ -13,3 +13,5 @@
 #tip{backdrop-filter:blur(8px);box-shadow:0 7px 20px rgba(0,0,0,.16)}
 @media(max-width:760px){#overlay{padding-top:82px}#overlay .panel{width:min(78vw,330px);padding:13px 17px}#overlay .panel h1{font-size:24px}#overlay .panel p{font-size:9px;margin:3px 0 5px}#overlay .primary{padding:10px}}
 @media (orientation:landscape) and (max-height:600px){#overlay{padding-top:58px}#overlay .panel{width:min(58vw,310px);padding:11px 15px}#overlay .panel h1{font-size:21px}#overlay .panel p{font-size:8px}#overlay .primary{padding:8px}}
+
+#tip.timing-ready{border-color:rgba(84,231,255,.9);box-shadow:0 0 0 2px rgba(84,231,255,.16),0 0 24px rgba(84,231,255,.55);transform:translateX(-50%) scale(1.04);color:#dffaff}
