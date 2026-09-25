@@ -158,7 +158,7 @@ function sendSnapshot(snapshot){
   return true;
 }
 function sendReady(){sendPacket({type:'ready',t:Date.now()})}
-function sendSessionStart(){if(localState.host&&localState.connected){localState.sessionReady=true;sendPacket({type:'session_start',t:Date.now()})}}
+function sendSessionStart(){if(localState.host&&localState.connected){localState.sessionReady=true;sendPacket({type:'session_start',t:Date.now()});localStatus('MATCH STARTED • HOST',true)}}
 function sendSessionAssign(slot){if(localState.host&&localState.connected){localState.slot=0;sendPacket({type:'session_assign',slot,t:Date.now()})}}
 function netHeartbeat(){
   if(!localState.connected)return;
