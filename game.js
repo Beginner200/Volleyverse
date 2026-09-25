@@ -114,7 +114,22 @@ function chooseSetterTarget(players){
   if(!attackers.length)return players[0];
   const usable=attackers.filter(p=>Math.abs(p.position.x-ball.position.x)<4.8);
   const pool=usable.length?usable:attackers;
-  return pool[Math.floor(Math.random()*pool.length)];
+  // Prefer an attacker who is already separating from the blockers, then vary between viable options.
+  const scored=pool.map(p=>({p,score:Math.abs(p.position.x-ball.position.x)*.35+Math.abs(p.position.z-p.userData.baseZ)*.15}));
+  scored.sort((a,b)=>a.score-b.score);
+  const top=scored.slice(0,Math.min(3,scored.length));
+  return top[Math.floor(Math.random()*top.length)].p;
+}
+function chooseOpenAttackLane(attacker,defenders){
+  const lanes=[-3.6,-2.4,-1.2,0,1.2,2.4,3.6];
+  const scored=lanes.map(x=>{
+    const nearest=defenders.reduce((d,p)=>Math.min(d,Math.hypot(x-p.position.x,4.0-p.position.z)),99);
+    const crossBias=Math.abs(x+attacker.position.x*.72);
+    const lineBias=Math.abs(x-attacker.position.x);
+    return {x,score:nearest*1.2+Math.min(crossBias,lineBias)*.12+Math.random()*.7};
+  });
+  scored.sort((a,b)=>b.score-a.score);
+  return scored[0].x;
 }
 function chooseAttackLane(attacker){
   const cross=THREE.MathUtils.clamp(-attacker.position.x*.72+(Math.random()-.5)*.8,-4.0,4.0);
@@ -144,7 +159,7 @@ function aiTouch(team,players){
   const profile=aiDifficultyProfile();const reach=1.15+profile.reaction*.48;if(Math.hypot(ball.position.x-receiver.position.x,ball.position.z-receiver.position.z)>reach||receiver.userData.cooldown>0)return false;
   const decision=aiRallyDecision(team,players);const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=decision.player||chooseAttackTarget(players,ball.position.x);let target=setter,label='RECEIVE';
   if(touches===1){target=attacker;label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
-  if(touches===0){launchTo(setter.position.x,setter.position.z,2.2,5.8)}else if(touches===1){launchTo(target.position.x,target.position.z,3.25,5.3)}else{const lane=chooseAttackLane(attacker);const miss=(Math.random()-.5)*(1.15*(1-profile.accuracy));launchTo(THREE.MathUtils.clamp(lane+miss,-4.0,4.0),home?4.0:-4.0,.3,7.4)}
+  if(touches===0){launchTo(setter.position.x,setter.position.z,2.2,5.8)}else if(touches===1){target=chooseSetterTarget(players);launchTo(target.position.x,target.position.z,3.25,5.3)}else{const opponents=home?awayPlayers:homePlayers;const openLane=chooseOpenAttackLane(attacker,opponents);const varied=chooseAttackLane(attacker);const lane=Math.random()<.68?openLane:varied;const miss=(Math.random()-.5)*(1.15*(1-profile.accuracy));launchTo(THREE.MathUtils.clamp(lane+miss,-4.0,4.0),home?4.0:-4.0,.3,7.4)}
   ballState.targetX=target.position.x;ballState.targetZ=target.position.z;ballState.lastTouch=team;ballState.side=team;ballState.teamTouches[team]++;ballState.lastAction=label.toLowerCase();receiver.userData.action=.55;receiver.userData.cooldown=.75;ballState.cooldown=.4;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
 }
 function aiCoverage(){
