@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 let localMode='host',pc=null,channel=null,roomCode='';
-const localState={connected:false,host:false};
+const localState={connected:false,host:false,reconnects:0,lastDisconnect:0};
 
 function localLog(message){
   const el=$('localLog'); if(el) el.innerHTML=message;
@@ -55,7 +55,7 @@ function bindChannel(ch){
     sendPacket({type:'hello',game:'VOLLEYVERSE',version:1,room:roomCode});
     sendReady();
   };
-  channel.onclose=()=>{localState.connected=false;localStatus('DISCONNECTED • ROOM LINK CLOSED')};
+  channel.onclose=()=>{localState.connected=false;localState.lastDisconnect=Date.now();localState.reconnects++;localStatus('DISCONNECTED • RECONNECT OR RESET TO CONTINUE')};
   channel.onerror=()=>localStatus('CONNECTION ERROR • RESET AND TRY AGAIN');
   channel.onmessage=e=>{
     try{
@@ -159,10 +159,10 @@ function netHeartbeat(){
   if(!localState.connected)return;
   const now=netNow();
   if(now-netState.lastPingAt>1800){netState.lastPingAt=now;sendPacket({type:'ping',t:Date.now()})}
-  if(now-netState.lastPongAt>6500){localState.connected=false;localStatus('CONNECTION LOST • CHECK WI-FI / HOTSPOT');}
+  if(now-netState.lastPongAt>6500){localState.connected=false;localStatus('CONNECTION LOST • RECONNECT OR RESET TO CONTINUE');}
 }
 
-window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,send:sendPacket,sendInput,sendSnapshot,sendReady,isHost:()=>localState.host,reset:resetLocal};
+window.VVLocalMultiplayer={open:showLocal,close:closeLocal,isConnected:()=>localState.connected,send:sendPacket,sendInput,sendSnapshot,sendReady,isHost:()=>localState.host,getStatus:()=>({...localState}),reset:resetLocal};
 
 $('localHostBtn')?.addEventListener('click',()=>setLocalMode('host'));
 $('localJoinBtn')?.addEventListener('click',()=>setLocalMode('join'));
