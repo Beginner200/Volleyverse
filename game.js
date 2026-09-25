@@ -90,7 +90,7 @@ function skillQuality(player,type,base){const rating=skillRating(player,type);co
 function launchTo(x,z,y=.35,forwardSpeed=7.4){const dx=x-ball.position.x,dz=z-ball.position.z;const horizontal=Math.max(Math.hypot(dx,dz),.1);const t=horizontal/forwardSpeed;ballState.v.x=dx/t;ballState.v.z=dz/t;ballState.v.y=((y-ball.position.y)+(5.75*t*t))/t}
 
 // DEVELOPMENT #4 • local Wi-Fi gameplay bridge
-let localLastSeq=0;
+let localLastSeq=0,clientControlledIndex=0,localSessionStarted=false;
 function localConnected(){return !!window.VVLocalMultiplayer?.isConnected?.()}
 function localHost(){return !!window.VVLocalMultiplayer?.isHost?.()}
 function localNetSnapshot(){
@@ -108,7 +108,7 @@ function applyLocalSnapshot(s){
     ball.position.set(s.ball.x,s.ball.y,s.ball.z);ballState.v.set(s.ball.vx,s.ball.vy,s.ball.vz);ballState.active=!!s.ball.active;ballState.lastTouch=s.ball.lastTouch||ballState.lastTouch;ballState.touches=s.ball.touches??ballState.touches;ballState.teamTouches=s.ball.teamTouches||ballState.teamTouches;ballState.lastAction=s.ball.lastAction||ballState.lastAction;
   }
   if(Array.isArray(s.players)){const all=[...homePlayers,...awayPlayers];s.players.forEach((v,i)=>{const p=all[i];if(!p)return;p.position.set(v.x,v.y,v.z);p.userData.jumpY=v.jumpY??p.userData.jumpY;p.userData.action=v.action??p.userData.action})}
-  if(Number.isInteger(s.controlledIndex)&&s.controlledIndex!==controlledIndex){controlledIndex=THREE.MathUtils.clamp(s.controlledIndex,0,5);updateControlled()}
+  if(!localConnected()||localHost()){if(Number.isInteger(s.controlledIndex)&&s.controlledIndex!==controlledIndex){controlledIndex=THREE.MathUtils.clamp(s.controlledIndex,0,5);updateControlled()}}
   updateHUD();
 }
 window.addEventListener('vv-local-packet',e=>{
@@ -118,7 +118,13 @@ window.addEventListener('vv-local-packet',e=>{
   }else if(p.type==='snapshot'&&!localHost()){
     if((p.seq||0)<localLastSeq)return;localLastSeq=p.seq;applyLocalSnapshot(p.state);
   }else if(p.type==='ready'&&localHost()){
+    window.VVLocalMultiplayer.send({type:'session_assign',slot:1,t:Date.now()});
     window.VVLocalMultiplayer.send({type:'snapshot',seq:0,state:localNetSnapshot()});
+  }else if(p.type==='session_assign'&&!localHost()){
+    clientControlledIndex=THREE.MathUtils.clamp(Number(p.slot)||1,0,5);
+    controlledIndex=clientControlledIndex;updateControlled();tip('LOCAL SLOT • PLAYER '+(clientControlledIndex+1));
+  }else if(p.type==='session_start'){
+    localSessionStarted=true;tip(localHost()?'LOCAL MATCH • HOST':'LOCAL MATCH • PLAYER '+(clientControlledIndex+1));
   }
 });
 
@@ -391,7 +397,7 @@ function autoSetAssist(){
 }
 function physics(dt){
   if(!state.ready||paused)return;
-  if(localConnected()&&!localHost())return;
+  if(localConnected()&&!localHost()&&!localSessionStarted)return;
   if(localConnected()&&localHost())updateRemotePlayer(dt);if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
   aiUpdate(dt);defensivePositioning(dt);netApproachAssist();autoReceiveAssist();autoSetAssist();if(ballState.active){timingFeedback('pass');timingFeedback('spike')}if(!ballState.active)return;ballState.cooldown=Math.max(0,ballState.cooldown-dt);const prevZ=ball.position.z;ballState.v.y-=11.5*dt;ball.position.addScaledVector(ballState.v,dt);
   const netTop=2.43,ballRadius=.2;const crossedCenter=(prevZ<0&&ball.position.z>=0)||(prevZ>0&&ball.position.z<=0);
@@ -409,4 +415,5 @@ function joyStart(e){if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDe
 function joyMove(e){if(!joystickActive||e.pointerId!==joystickPointerId)return;e.preventDefault();setJoystickFromPoint(e.clientX,e.clientY);if(localConnected()&&!localHost())window.VVLocalMultiplayer.sendInput({kind:'move',x:keys.x,z:keys.z})}
 function joyEnd(e){if(joystickPointerId!==null&&e?.pointerId!==undefined&&e.pointerId!==joystickPointerId)return;joystickActive=false;joystickPointerId=null;stick.style.transform='translate(0,0)';keys.x=keys.z=0;if(localConnected()&&!localHost())window.VVLocalMultiplayer.sendInput({kind:'move',x:0,z:0})}
 controls?.addEventListener('pointerdown',e=>{if(e.target.closest('.action'))return;const half=innerWidth*.52;if(e.clientX<=half)joyStart(e)},{passive:false});controls?.addEventListener('pointermove',joyMove,{passive:false});controls?.addEventListener('pointerup',joyEnd,{passive:false});controls?.addEventListener('pointercancel',joyEnd,{passive:false});controls?.addEventListener('lostpointercapture',joyEnd,{passive:false});
+$('localStart')?.addEventListener('pointerdown',()=>{if(window.VVLocalMultiplayer?.isHost?.()){localSessionStarted=true;window.VVLocalMultiplayer.sendSessionStart?.();tip('LOCAL MATCH • HOST');}});
 window.addEventListener('resize',resize);const observer=new MutationObserver(()=>{if(!state.ready&&!wrap.classList.contains('hidden'))createScene()});observer.observe(wrap,{attributes:true,attributeFilter:['class']});if(!wrap.classList.contains('hidden'))createScene();
