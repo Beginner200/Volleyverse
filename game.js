@@ -105,7 +105,7 @@ function updateRemotePlayer(dt){
   if(mag>.05&&!rallyLocked){p.position.x=THREE.MathUtils.clamp(p.position.x+remoteKeys.x*speed*dt,-4.25,4.25);p.position.z=THREE.MathUtils.clamp(p.position.z+remoteKeys.z*speed*dt,-4.35,-.25)}
 }
 function updateControlled(){homePlayers.forEach((p,i)=>{p.userData.ring.visible=i===controlledIndex;p.userData.arrow.visible=i===controlledIndex});controlled=homePlayers[controlledIndex]||homePlayers[0]}
-function resetPlayers(){
+function resetPlayers(){window.VVReplay?.start?.({mode:localStorage.getItem('volleyverseMatchMode')||'real'});
   const roster=window.VVCharacters?.roster||[];
   let saved=null;try{saved=JSON.parse(localStorage.getItem('volleyverseRoster')||'null')}catch(e){}
   const homeIds=(Array.isArray(saved)&&saved.length===6?saved:['astra','kairo','nova','rex','mira','zen']);
@@ -173,7 +173,7 @@ window.addEventListener('vv-local-packet',e=>{
   }
 });
 
-function action(type){
+function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters?.roster?.[controlledIndex]?.name||'PLAYER'});
   if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'action',type});tip('LOCAL • INPUT SENT TO HOST');return}
   $('tip')?.classList.remove('timing-ready');
   if(!state.ready||rallyLocked)return;if(type==='serve'){serve();return}if(!ballState.active||ballState.cooldown>0)return;
@@ -407,7 +407,7 @@ function aiUpdate(dt){
   awayPlayers.forEach(p=>{moveAIPlayer(p,dt,targetX,targetZ,false);p.userData.cooldown=Math.max(0,p.userData.cooldown-dt)});
   if(ballState.active){if(aiBlock())return;if(aiTouch('home',homePlayers))return;if(aiTouch('away',awayPlayers))return;const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;const target=chooseDefenseTarget(defenders);if(target&&target!==controlled)target.userData.coverageX=THREE.MathUtils.clamp(ball.position.x,-4.1,4.1);if(defendingHome&&defensiveRead('home',homePlayers))return;if(!defendingHome&&defensiveRead('away',awayPlayers))return}
 }
-function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});const reward=window.VVMatchRewards?.grant?.(won);window.VVMissions?.completeMatch?.(won,homeSets);$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}${reward?` • +${reward.coins} coins • +${reward.gems} gems`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');if(reward)window.VVMatchRewards.openSummary?.(reward);return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
+function point(winner){if(rallyLocked)return;rallyLocked=true;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;updateHUD();const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;window.VVReplay?.stop?.();const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});const reward=window.VVMatchRewards?.grant?.(won);window.VVMissions?.completeMatch?.(won,homeSets);$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}${reward?` • +${reward.coins} coins • +${reward.gems} gems`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');if(reward)window.VVMatchRewards.openSummary?.(reward);return}setNumber++;homeScore=awayScore=0;tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
 function netApproachAssist(){
   if(!controlled||!ballState.active||rallyLocked)return;
   const attackingAway=ball.position.z>.15&&ballState.lastTouch==='away';
