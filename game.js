@@ -112,7 +112,7 @@ function createPlayer(color,name,x,z,home,position,stats={}){
   const numberMap={Astra:'1',Kairo:'5',Nova:'7',Rex:'4',Mira:'3',Zen:'6',Vex:'2',Luna:'8',Orion:'10',Kai:'11',Sora:'9',Axel:'12'};
   const nCanvas=document.createElement('canvas');nCanvas.width=128;nCanvas.height=160;const nctx=nCanvas.getContext('2d');nctx.fillStyle='#ffffff';nctx.font='900 112px Arial';nctx.textAlign='center';nctx.textBaseline='middle';nctx.fillText(numberMap[name]||'1',64,78);const nTex=new THREE.CanvasTexture(nCanvas);nTex.colorSpace=THREE.SRGBColorSpace;number.material.map=nTex;number.material.needsUpdate=true;
   g.scale.setScalar(1.12);
-  g.userData={name,home,position,stats,baseX:x,baseZ:z,speed:3.9+(stats.speed||0)*.012,arms,legs,ring,arrow,action:0,cooldown:0,moveX:0,moveZ:0,phase:Math.random()*Math.PI*2,stance:0,jumpY:0,jumpV:0,aiTargetX:x,aiTargetZ:z,coverageX:x};state.scene.add(g);return g;
+  const playerState=makePlayerState({name,team:home?'home':'away',role:position,rotationPosition:0,liberoEligible:position==='L',stats});g.userData={name,home,position,role:position,playerState,baseX:x,baseZ:z,speed:3.9+(stats.speed||0)*.012,arms,legs,ring,arrow,action:0,cooldown:0,moveX:0,moveZ:0,phase:Math.random()*Math.PI*2,stance:0,jumpY:0,jumpV:0,aiTargetX:x,aiTargetZ:z,coverageX:x};state.scene.add(g);return g;
 }
 function matchStats(character){
   if(!character)return{};
@@ -146,7 +146,7 @@ function buildTeams(){
     p.userData.characterRarity=ch.rarity||'Common';
     return p;
   });
-  controlled=homePlayers[0];applyRotationPositions('home',homePlayers);applyRotationPositions('away',awayPlayers);
+  controlled=homePlayers[0];applyRotationPositions('home',homePlayers);applyRotationPositions('away',awayPlayers);VVPlayerState.registerTeam('home',homePlayers.map(p=>p.userData.playerState));VVPlayerState.registerTeam('away',awayPlayers.map(p=>p.userData.playerState));homePlayers.forEach(p=>{p.userData.playerState.rotationPosition=p.userData.rotationPosition});awayPlayers.forEach(p=>{p.userData.playerState.rotationPosition=p.userData.rotationPosition});VVPlayerState.setControlled(controlled.userData.playerState.id,true);
 }
 function buildBall(){ball=new THREE.Mesh(new THREE.SphereGeometry(.2,20,14),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.25}));state.scene.add(ball)}
 function applyRemoteInput(input){
@@ -161,7 +161,7 @@ function updateRemotePlayer(dt){
   const speed=p.userData.speed||4.2;const mag=Math.hypot(remoteKeys.x,remoteKeys.z);
   if(mag>.05&&!rallyLocked){p.position.x=THREE.MathUtils.clamp(p.position.x+remoteKeys.x*speed*dt,-4.25,4.25);p.position.z=THREE.MathUtils.clamp(p.position.z+remoteKeys.z*speed*dt,-4.35,-.25)}
 }
-function updateControlled(){homePlayers.forEach((p,i)=>{p.userData.ring.visible=i===controlledIndex;p.userData.arrow.visible=i===controlledIndex});controlled=homePlayers[controlledIndex]||homePlayers[0]}
+function updateControlled(){homePlayers.forEach((p,i)=>{const active=i===controlledIndex;p.userData.ring.visible=active;p.userData.arrow.visible=active;p.userData.playerState.controlled=active});controlled=homePlayers[controlledIndex]||homePlayers[0];if(controlled?.userData.playerState)VVPlayerState.setControlled(controlled.userData.playerState.id,true)}
 function rotationPositionFor(team,index){return rotationSlots[(index+rotationState[team])%6]}
 function courtSlotPosition(team,position){
   const x={1:2.2,2:2.2,3:-2.2,4:-5.8,5:-5.8,6:-2.2}[position];
@@ -172,7 +172,7 @@ function applyRotationPositions(team,players){
   players.forEach((p,i)=>{
     const pos=rotationPositionFor(team,i);
     const slot=courtSlotPosition(team,pos);
-    p.userData.rotationPosition=pos;
+    p.userData.rotationPosition=pos;p.userData.playerState.rotationPosition=pos;
     p.userData.baseX=slot.x;p.userData.baseZ=slot.z;
     p.position.x=slot.x;p.position.z=slot.z;
     p.userData.aiTargetX=slot.x;p.userData.aiTargetZ=slot.z;p.userData.coverageX=slot.x;
