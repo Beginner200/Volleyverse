@@ -635,6 +635,8 @@ function aiUpdate(dt){
 function point(winner,reason='RALLY'){if(rallyLocked)return;VVPlayerState.endRally();if(onlineMatchActive)return;ballState.rallyPhase='POINT';ballState.active=false;ballState.faultReason=reason;window.VVReplay?.record?.('point',{winner,reason});rallyLocked=true;const previousServer=servingTeam;if(winner==='home'){homeScore++;matchHomePoints++}else awayScore++;servingTeam=winner;if(winner!==previousServer)rotateTeam(winner);updateRallyHUD((winner==='home'?'VERSE':'RIVALS')+' WIN THE POINT • '+reason);const target=setNumber===5?15:25;if((homeScore>=target||awayScore>=target)&&Math.abs(homeScore-awayScore)>=2){if(homeScore>awayScore)homeSets++;else awaySets++;if(homeSets>=3||awaySets>=3){const won=homeSets>awaySets;window.VVReplay?.stop?.();const career=window.VVCareer?.recordMatch?.({won,setsWon:homeSets,points:matchHomePoints});const reward=window.VVMatchRewards?.grant?.(won);window.VVMissions?.completeMatch?.(won,homeSets);$('overlayTitle').textContent=won?'VICTORY':'DEFEAT';$('overlayText').textContent=`Match complete • ${homeSets}–${awaySets} sets${career?` • +${career.xpAward} XP${career.leveledUp?' • LEVEL UP!':''}`:''}${reward?` • +${reward.coins} coins • +${reward.gems} gems`:''}`;$('playBtn').textContent='PLAY AGAIN';$('overlay').classList.remove('hidden');if(reward)window.VVMatchRewards.openSummary?.(reward);return}setNumber++;homeScore=awayScore=0;VVPlayerState.startSet();rotationState.home=rotationState.away=0;applyRotationPositions('home',homePlayers);applyRotationPositions('away',awayPlayers);tip(`SET ${setNumber} • FIRST TO ${setNumber===5?15:25}`)}setTimeout(()=>{resetPlayers();resetBall();updateHUD()},700)}
 function netApproachAssist(){
   if(!controlled||!ballState.active||rallyLocked)return;
+  // Never override deliberate player movement.
+  if(Math.hypot(keys.x,keys.z)>.12)return;
   const attackingAway=ball.position.z>.15&&ballState.lastTouch==='away';
   if(!attackingAway)return;
   const role=controlled.userData.position;
@@ -648,6 +650,8 @@ function netApproachAssist(){
 }
 function autoReceiveAssist(){
   if(!controlled||!ballState.active||rallyLocked)return;
+  // Movement input always has priority over automatic positioning.
+  if(Math.hypot(keys.x,keys.z)>.12)return;
   if(ball.position.z>=0)return;
   const dx=ball.position.x-controlled.position.x,dz=ball.position.z-controlled.position.z;
   const dist=Math.hypot(dx,dz);
@@ -658,6 +662,7 @@ function autoReceiveAssist(){
 }
 function autoSetAssist(){
   if(!controlled||!ballState.active||rallyLocked)return;
+  if(Math.hypot(keys.x,keys.z)>.12)return;
   if(ballState.teamTouches.home!==1||ball.position.z>=0)return;
   const dx=ball.position.x-controlled.position.x,dz=ball.position.z-controlled.position.z;
   if(Math.hypot(dx,dz)<1.35&&ball.position.y>1.25&&ball.position.y<3.7){
