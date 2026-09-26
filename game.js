@@ -135,7 +135,7 @@ function skillQuality(player,type,base){const rating=skillRating(player,type);co
 function launchTo(x,z,y=.35,forwardSpeed=7.4){const dx=x-ball.position.x,dz=z-ball.position.z;const horizontal=Math.max(Math.hypot(dx,dz),.1);const t=horizontal/forwardSpeed;ballState.v.x=dx/t;ballState.v.z=dz/t;ballState.v.y=((y-ball.position.y)+(5.75*t*t))/t}
 
 // DEVELOPMENT #4 • local Wi-Fi gameplay bridge
-let localLastSeq=0,clientControlledIndex=0,localSessionStarted=false;
+let localLastSeq=0,clientControlledIndex=0,localSessionStarted=false,onlineMatchActive=false,onlineTeam='home',onlineSlot=-1,onlineLastInputAt=0;
 function localConnected(){return !!window.VVLocalMultiplayer?.isConnected?.()}
 function localHost(){return !!window.VVLocalMultiplayer?.isHost?.()}
 function localNetSnapshot(){
@@ -146,6 +146,7 @@ function localNetSnapshot(){
     controlledIndex
   };
 }
+function applyOnlineSnapshot(payload){const s=payload?.state||payload;if(!s)return;onlineMatchActive=true;localSessionStarted=true;onlineTeam=payload?.localTeam||onlineTeam;onlineSlot=Number.isInteger(payload?.localSlot)?payload.localSlot:onlineSlot;homeScore=s.scores?.home??homeScore;awayScore=s.scores?.away??awayScore;homeSets=s.sets?.home??homeSets;awaySets=s.sets?.away??awaySets;setNumber=s.setNumber??setNumber;servingTeam=s.serving||servingTeam;rallyLocked=s.status==='FINISHED';const all=[...homePlayers,...awayPlayers];if(Array.isArray(s.players)){s.players.forEach(v=>{const p=all[v.team==='home'?Number(v.slot):6+Number(v.slot)];if(!p)return;p.userData.onlineServerId=v.id;p.position.set(Number(v.x)||0,Number(v.y)||0,Number(v.z)||0);p.userData.moveX=0;p.userData.moveZ=0;p.userData.action=v.connected?0:.25})}if(s.ball&&ball){ball.position.set(Number(s.ball.x)||0,Number(s.ball.y)||0,Number(s.ball.z)||0);ballState.v.set(Number(s.ball.vx)||0,Number(s.ball.vy)||0,Number(s.ball.vz)||0);ballState.active=!!s.ball.active;ballState.lastTouch=s.ball.lastTeam||ballState.lastTouch;ballState.teamTouches=s.rally?.teamTouches||ballState.teamTouches}const mine=onlineTeam==='away'?awayPlayers[onlineSlot]:homePlayers[onlineSlot];if(mine){controlled=mine;controlledIndex=Math.max(0,homePlayers.indexOf(mine));homePlayers.forEach(p=>{p.userData.ring.visible=false;p.userData.arrow.visible=false});mine.userData.ring.visible=true;mine.userData.arrow.visible=true}updateHUD();tip(onlineTeam==='away'?'ONLINE 6V6 • AWAY':'ONLINE 6V6 • HOME')}
 function applyLocalSnapshot(s){
   if(!s)return;
   homeScore=s.homeScore??homeScore;awayScore=s.awayScore??awayScore;homeSets=s.homeSets??homeSets;awaySets=s.awaySets??awaySets;setNumber=s.setNumber??setNumber;servingTeam=s.servingTeam||servingTeam;rallyLocked=!!s.rallyLocked;
@@ -156,6 +157,7 @@ function applyLocalSnapshot(s){
   if(!localConnected()||localHost()){if(Number.isInteger(s.controlledIndex)&&s.controlledIndex!==controlledIndex){controlledIndex=THREE.MathUtils.clamp(s.controlledIndex,0,5);updateControlled()}}
   updateHUD();
 }
+window.addEventListener('vv-online-session',e=>{const d=e.detail||{};onlineMatchActive=true;localSessionStarted=true;onlineTeam=d.localTeam||'home';onlineSlot=Number.isInteger(d.localSlot)?d.localSlot:-1;localStorage.setItem('volleyverseMatchMode','online');setTimeout(()=>{if(!state.ready)createScene();tip('ONLINE 6V6 • LIVE MATCH');},0)});window.addEventListener('vv-online-snapshot',e=>{if(onlineMatchActive)applyOnlineSnapshot(e.detail||{})});
 window.addEventListener('vv-local-packet',e=>{
   const p=e.detail||{};
   if(p.type==='input'&&localHost()){
@@ -173,7 +175,7 @@ window.addEventListener('vv-local-packet',e=>{
   }
 });
 
-function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters?.roster?.[controlledIndex]?.name||'PLAYER'});
+function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters?.roster?.[controlledIndex]?.name||'PLAYER'});if(onlineMatchActive){const o=window.VVOnlineClient?.getLocalPlayer?.()||{};const slot=Number.isInteger(o.slot)?o.slot:onlineSlot;if(slot>=0)window.VVOnlineClient?.input?.(slot,keys.x,keys.z,type);tip('ONLINE • '+type.toUpperCase()+' SENT');return}
   if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'action',type});tip('LOCAL • INPUT SENT TO HOST');return}
   $('tip')?.classList.remove('timing-ready');
   if(!state.ready||rallyLocked)return;if(type==='serve'){serve();return}if(!ballState.active||ballState.cooldown>0)return;
@@ -441,6 +443,7 @@ function autoSetAssist(){
   }
 }
 function physics(dt){
+  if(onlineMatchActive)return;
   if(!state.ready||paused)return;
   if(localConnected()&&!localHost()&&!localSessionStarted)return;
   if(localConnected()&&localHost())updateRemotePlayer(dt);if(controlled){controlled.userData.moveX=keys.x;controlled.userData.moveZ=keys.z;updateApproach(dt)}
@@ -451,7 +454,7 @@ function physics(dt){
 }
 function animatePlayers(dt){const now=performance.now();[...homePlayers,...awayPlayers].forEach(p=>{const u=p.userData;u.jumpV-=14*dt;u.jumpY+=u.jumpV*dt;if(u.jumpY<0){u.jumpY=0;u.jumpV=0;}p.position.y=u.jumpY;const uY=u.jumpY;u.cooldown=Math.max(0,u.cooldown-dt);u.action=Math.max(0,u.action-dt);const moving=Math.abs(u.moveX)+Math.abs(u.moveZ)>.12;const speed=Math.hypot(u.moveX,u.moveZ);const stride=moving?Math.sin(now*.014+u.phase)*Math.min(.42,.16+speed*.18):Math.sin(now*.002+u.phase)*.025;const rallyReady=ballState.active&&!moving;const crouch=rallyReady?-.10:0;const swing=u.action>0?Math.sin(u.action*18)*.8:0;const leftLeg=u.legs[0],rightLeg=u.legs[1],leftArm=u.arms[0],rightArm=u.arms[1];leftLeg.thigh.rotation.x=stride;rightLeg.thigh.rotation.x=-stride;leftLeg.shin.rotation.x=stride*.55;rightLeg.shin.rotation.x=-stride*.55;leftArm.upper.rotation.z=-.2-swing+(rallyReady?-.18:0);rightArm.upper.rotation.z=.2+swing+(rallyReady ? .18 : 0);leftArm.lower.rotation.z=-.08-swing*.45;rightArm.lower.rotation.z=.08+swing*.45;leftArm.upper.rotation.x=moving?-.18:0;rightArm.upper.rotation.x=moving ? .18 : 0;leftArm.lower.rotation.x=moving?-.08:0;rightArm.lower.rotation.x=moving ? .08 : 0;u.stance=crouch;p.position.y=uY+(u.action>.6?Math.max(0,Math.sin((.8-u.action)*Math.PI)*.18):0);p.rotation.y=Math.atan2(u.moveX,Math.max(.001,Math.abs(u.moveZ)))+(p.userData.home?Math.PI:0);const torso=p.children[0];if(torso)torso.rotation.x=crouch;if(u.action>0&&u.action<.35){leftArm.upper.rotation.z-=.25;rightArm.upper.rotation.z+=.25}})}
 function resize(){if(!state.ready)return;state.camera.aspect=Math.max(innerWidth,1)/Math.max(innerHeight,1);state.camera.updateProjectionMatrix();state.renderer.setSize(Math.max(innerWidth,1),Math.max(innerHeight,1),false)}
-let last=performance.now();function loop(now){const dt=Math.min((now-last)/1000,.035);last=now;if(state.ready){physics(dt);animatePlayers(dt);if(localConnected()&&localHost())window.VVLocalMultiplayer.sendSnapshot(localNetSnapshot());state.renderer.render(state.scene,state.camera)}requestAnimationFrame(loop)}
+let last=performance.now();function loop(now){const dt=Math.min((now-last)/1000,.035);last=now;if(state.ready){physics(dt);animatePlayers(dt);if(onlineMatchActive&&window.VVOnlineClient?.isConnected?.()&&now-onlineLastInputAt>70){const o=window.VVOnlineClient.getLocalPlayer?.()||{};if(Number.isInteger(o.slot)){onlineSlot=o.slot;window.VVOnlineClient.input(o.slot,keys.x,keys.z,null);onlineLastInputAt=now}}if(localConnected()&&localHost())window.VVLocalMultiplayer.sendSnapshot(localNetSnapshot());state.renderer.render(state.scene,state.camera)}requestAnimationFrame(loop)}
 ['pass','set','spike','block','dive','serve'].forEach(t=>$(t+'Btn')?.addEventListener('pointerdown',e=>{e.preventDefault();action(t)}));$('switchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();switchPlayer()});$('pauseBtn')?.addEventListener('pointerdown',()=>{paused=!paused;$('pauseBtn').textContent=paused?'▶':'Ⅱ';tip(paused?'MATCH PAUSED':'RALLY LIVE • MOVE AND PLAY')});
 $('playBtn')?.addEventListener('pointerdown',()=>{if($('playBtn').textContent==='PLAY AGAIN'){homeScore=awayScore=homeSets=awaySets=0;setNumber=1;matchHomePoints=0;servingTeam='home';controlledIndex=0;resetPlayers();updateControlled();updateHUD();$('overlayTitle').textContent='READY?';$('overlayText').textContent='Move your player, receive, set, spike and defend.';$('playBtn').textContent='PLAY MATCH';resetBall()}else{$('overlay').classList.add('hidden');createScene()}});
 const controls=$('controls'),joy=$('joystick'),stick=$('stick');let joystickActive=false,joystickPointerId=null;
