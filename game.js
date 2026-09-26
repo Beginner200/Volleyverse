@@ -192,7 +192,7 @@ function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters
 }
 function jumpPlayer(p,force=4.8){if(!p||p.userData.jumpY>0.02)return false;p.userData.jumpV=force;p.userData.action=Math.max(p.userData.action,.35);return true}
 function updateApproach(dt){if(!controlled)return;const u=controlled.userData;const speed=controlled.userData.speed||4.2;const mag=Math.hypot(u.moveX||0,u.moveZ||0);if(mag>.08&&state.ready&&!rallyLocked){controlled.position.x+=THREE.MathUtils.clamp(u.moveX,-1,1)*speed*dt;controlled.position.z+=THREE.MathUtils.clamp(u.moveZ,-1,1)*speed*dt;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x,-4.25,4.25);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z,-4.35,-.25);}}
-function switchPlayer(){if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'switch'});return}if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
+function switchPlayer(){if(onlineMatchActive){tip('ONLINE 6V6 • YOUR ASSIGNED PLAYER IS LOCKED');return}if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'switch'});return}if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
 function roleTarget(p,home,targetX,targetZ){
   const baseX=p.userData.baseX,baseZ=p.userData.baseZ,role=p.userData.position;const side=home?-1:1;let tx=baseX,tz=baseZ;
   // Advanced 6v6 positioning: players keep role lanes and cover the likely attack zone
