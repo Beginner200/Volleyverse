@@ -1,4 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+import {VVPlayerState,makePlayerState} from './player-state.js';
 
 const $ = id => document.getElementById(id);
 const wrap = $('canvasWrap');
