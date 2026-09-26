@@ -226,6 +226,22 @@ function moveAIPlayer(p,dt,targetX,targetZ,home){
   if(dist>.04){const step=Math.min(dist,max);p.position.x+=dx/dist*step;p.position.z+=dz/dist*step;p.userData.moveX=dx/dist;p.userData.moveZ=dz/dist}else{p.userData.moveX=0;p.userData.moveZ=0}
   p.position.x=THREE.MathUtils.clamp(p.position.x,-4.25,4.25);p.position.z=home?THREE.MathUtils.clamp(p.position.z,-4.35,-.25):THREE.MathUtils.clamp(p.position.z,.25,4.35);
 }
+function chooseReceiver(players,ballX=ball.position.x){
+  if(!players||!players.length)return null;
+  const roles=['L','LIBERO','OH','OPP','MB'];
+  const pool=players.filter(p=>roles.includes(p.userData.position));
+  const list=pool.length?pool:players;
+  const predictedX=THREE.MathUtils.clamp(ballX+(ballState.v?.x||0)*.28,-4.15,4.15);
+  return list.reduce((best,p)=>{
+    const d=Math.hypot(p.position.x-predictedX,p.position.z-ball.position.z);
+    const role=p.userData.position;
+    const bonus=(role==='L'||role==='LIBERO')?.65:(role==='OH'||role==='OPP')?.22:(role==='MB')?.08:0;
+    const bd=Math.hypot(best.position.x-predictedX,best.position.z-ball.position.z);
+    const br=best.userData.position;
+    const bestBonus=(br==='L'||br==='LIBERO')?.65:(br==='OH'||br==='OPP')?.22:(br==='MB')?.08:0;
+    return d-bonus<bd-bestBonus?p:best;
+  },list[0]);
+}
 function chooseAttackTarget(players,ballX){
   const attackers=players.filter(p=>['OH','OPP','MB'].includes(p.userData.position));
   if(!attackers.length)return players[0];
