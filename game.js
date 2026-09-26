@@ -409,7 +409,7 @@ function aiTouch(team,players){
   const decision=aiRallyDecision(team,players);const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=decision.player||chooseAttackTarget(players,ball.position.x);let target=setter,label='RECEIVE';
   if(touches===1){target=attacker;label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
   if(touches===0){launchTo(setter.position.x,setter.position.z,2.2,5.8)}else if(touches===1){target=chooseSetterTarget(players);launchTo(target.position.x,target.position.z,3.25,5.3)}else{const opponents=home?awayPlayers:homePlayers;const openLane=chooseOpenAttackLane(attacker,opponents);const varied=chooseAttackLane(attacker);const lane=Math.random()<.68?openLane:varied;const miss=(Math.random()-.5)*(1.15*(1-profile.accuracy));launchTo(THREE.MathUtils.clamp(lane+miss,-4.0,4.0),home?4.0:-4.0,.3,7.4)}
-  ballState.targetX=target.position.x;ballState.targetZ=target.position.z;ballState.lastTouch=team;ballState.side=team;ballState.teamTouches[team]++;ballState.lastAction=label.toLowerCase();receiver.userData.action=.55;receiver.userData.cooldown=.75;ballState.cooldown=.4;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
+  ballState.targetX=target.position.x;ballState.targetZ=target.position.z;registerBallContact(team,label.toLowerCase(),{countTouch:true,cooldown:.4});receiver.userData.action=.55;receiver.userData.cooldown=.75;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
 }
 function aiCoverage(){
   if(!ballState.active)return;
