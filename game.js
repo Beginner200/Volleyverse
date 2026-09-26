@@ -175,7 +175,7 @@ window.addEventListener('vv-local-packet',e=>{
   }
 });
 
-function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters?.roster?.[controlledIndex]?.name||'PLAYER'});if(onlineMatchActive){const o=window.VVOnlineClient?.getLocalPlayer?.()||{};const slot=Number.isInteger(o.slot)?o.slot:onlineSlot;if(slot>=0)window.VVOnlineClient?.input?.(slot,keys.x,keys.z,type);tip('ONLINE • '+type.toUpperCase()+' SENT');return}
+function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters?.roster?.[controlledIndex]?.name||'PLAYER'});if(onlineMatchActive){const mine=onlineTeam==='away'?awayPlayers[onlineSlot]:homePlayers[onlineSlot];const o=window.VVOnlineClient?.getLocalPlayer?.()||{};const slot=Number.isInteger(o.slot)?o.slot:onlineSlot;if(slot>=0&&mine){keys.x=THREE.MathUtils.clamp(Number(keys.x)||0,-1,1);keys.z=THREE.MathUtils.clamp(Number(keys.z)||0,-1,1);window.VVOnlineClient?.input?.(slot,keys.x,keys.z,type);tip('ONLINE • '+type.toUpperCase()+' SENT')}return}
   if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'action',type});tip('LOCAL • INPUT SENT TO HOST');return}
   $('tip')?.classList.remove('timing-ready');
   if(!state.ready||rallyLocked)return;if(type==='serve'){serve();return}if(!ballState.active||ballState.cooldown>0)return;
