@@ -384,10 +384,15 @@ function updateApproach(dt){
 function switchPlayer(){if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'switch'});return}if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
 function roleTarget(p,home,targetX,targetZ){
   const baseX=p.userData.baseX,baseZ=p.userData.baseZ,role=p.userData.position;const side=home?-1:1;let tx=baseX,tz=baseZ;
-  // Advanced 6v6 positioning: players keep role lanes and cover the likely attack zone
-  // instead of all converging on the ball.
-  const dangerX=THREE.MathUtils.clamp(targetX,-4.15,4.15);
-  const dangerZ=home?THREE.MathUtils.clamp(targetZ,-4.2,-.25):THREE.MathUtils.clamp(targetZ,.25,4.2);
+  // 6v6 formation: preserve role lanes, but anticipate the ball's next
+  // contact point instead of simply following its current position.
+  const lead=Math.min(.42,Math.max(.08,(ballState.v?.z||0)!==0?.26:0));
+  const predictedX=THREE.MathUtils.clamp(targetX+(ballState.v?.x||0)*.32,-4.15,4.15);
+  const predictedZ=home
+    ? THREE.MathUtils.clamp(targetZ+(ballState.v?.z||0)*lead,-4.2,-.25)
+    : THREE.MathUtils.clamp(targetZ+(ballState.v?.z||0)*lead,.25,4.2);
+  const dangerX=predictedX;
+  const dangerZ=predictedZ;
   if(!ballState.active){tx=baseX+Math.sin(performance.now()*.001+p.userData.phase)*.18;tz=baseZ+Math.sin(performance.now()*.0012+p.userData.phase)*.08}
   else{
     const towardX=THREE.MathUtils.clamp((dangerX-baseX)*.34,-1.7,1.7);
@@ -410,6 +415,15 @@ function moveAIPlayer(p,dt,targetX,targetZ,home){
   const role=p.userData.position;
   const coverageRole=['L','LIBERO','OH','OPP'].includes(role);
   if(defending&&coverageRole){t.x=THREE.MathUtils.clamp(t.x*.62+(p.userData.coverageX??p.userData.baseX)*.38,-4.15,4.15)}
+  // After a contact, bias the player back toward formation rather than
+  // letting the next AI tick keep pulling them toward the ball.
+  const recovery=Number(p.userData.recovery||0);
+  if(recovery>0){
+    const blend=Math.min(.65,recovery*.8);
+    t.x=THREE.MathUtils.lerp(t.x,p.userData.baseX,blend);
+    t.z=THREE.MathUtils.lerp(t.z,p.userData.baseZ,blend);
+    p.userData.recovery=Math.max(0,recovery-dt);
+  }
   p.userData.aiTargetX=t.x;p.userData.aiTargetZ=t.z;
 
   const dx=t.x-p.position.x,dz=t.z-p.position.z,dist=Math.hypot(dx,dz);
@@ -540,7 +554,7 @@ function aiTouch(team,players){
   const decision=aiRallyDecision(team,players);const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];const attacker=decision.player||chooseAttackTarget(players,ball.position.x);let target=setter,label='RECEIVE';
   if(touches===1){target=attacker;label='SET'}else if(touches===2){target=attacker;label='ATTACK'}
   if(touches===0){launchTo(setter.position.x,setter.position.z,2.2,5.8)}else if(touches===1){target=chooseSetterTarget(players);launchTo(target.position.x,target.position.z,3.25,5.3)}else{const opponents=home?awayPlayers:homePlayers;const openLane=chooseOpenAttackLane(attacker,opponents);const varied=chooseAttackLane(attacker);const lane=Math.random()<.68?openLane:varied;const miss=(Math.random()-.5)*(1.15*(1-profile.accuracy));launchTo(THREE.MathUtils.clamp(lane+miss,-4.0,4.0),home?4.0:-4.0,.3,7.4)}
-  ballState.targetX=target.position.x;ballState.targetZ=target.position.z;registerBallContact(team,label.toLowerCase(),{countTouch:true,cooldown:.4});receiver.userData.action=.55;receiver.userData.cooldown=.75;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
+  ballState.targetX=target.position.x;ballState.targetZ=target.position.z;registerBallContact(team,label.toLowerCase(),{countTouch:true,cooldown:.4});receiver.userData.action=.55;receiver.userData.cooldown=.75;receiver.userData.recovery=.55;receiver.userData.coverageX=ball.position.x;tip((home?'TEAM':'RIVALS')+' • '+label);return true;
 }
 function aiCoverage(){
   if(!ballState.active)return;
