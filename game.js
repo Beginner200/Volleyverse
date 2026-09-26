@@ -417,6 +417,9 @@ function moveAIPlayer(p,dt,targetX,targetZ,home){
   if(defending&&coverageRole){t.x=THREE.MathUtils.clamp(t.x*.62+(p.userData.coverageX??p.userData.baseX)*.38,-4.15,4.15)}
   // After a contact, bias the player back toward formation rather than
   // letting the next AI tick keep pulling them toward the ball.
+  const spacing=Number(p.userData.spacingX||0);
+  if(ballState.active&&defending) t.x=THREE.MathUtils.clamp(t.x+spacing,-4.15,4.15);
+
   const recovery=Number(p.userData.recovery||0);
   if(recovery>0){
     const blend=Math.min(.65,recovery*.8);
@@ -558,14 +561,40 @@ function aiTouch(team,players){
 }
 function aiCoverage(){
   if(!ballState.active)return;
-  const defendingHome=ballState.lastTouch==='away';const defenders=defendingHome?homePlayers:awayPlayers;
-  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.32,-4.15,4.15);
-  defenders.forEach(p=>{
-    if(p===controlled||p.userData.remoteControlled)return;
+  const defendingHome=ballState.lastTouch==='away';
+  const defenders=defendingHome?homePlayers:awayPlayers;
+  const predictedX=THREE.MathUtils.clamp(ball.position.x+(ballState.v?.x||0)*.32,-4.15,4.15);
+  const eligible=defenders.filter(p=>p!==controlled&&!p.userData.remoteControlled);
+  if(!eligible.length)return;
+
+  // One player commits to the predicted contact point. Everyone else shifts
+  // slightly to cover the space that player leaves behind.
+  const primary=eligible.reduce((best,p)=>{
+    const d=Math.hypot(p.position.x-predictedX,p.position.z-ball.position.z);
+    const bd=Math.hypot(best.position.x-predictedX,best.position.z-ball.position.z);
     const role=p.userData.position;
+    const bonus=(role==='L'||role==='LIBERO')?.65:(role==='OH'||role==='OPP')?.22:0;
+    const br=best.userData.position;
+    const bestBonus=(br==='L'||br==='LIBERO')?.65:(br==='OH'||br==='OPP')?.22:0;
+    return d-bonus<bd-bestBonus?p:best;
+  },eligible[0]);
+
+  const commitment=THREE.MathUtils.clamp(predictedX-primary.userData.baseX,-3.0,3.0);
+  eligible.forEach(p=>{
+    const role=p.userData.position;
+    const isPrimary=p===primary;
     if(['L','LIBERO','OH','OPP'].includes(role)){
-      p.userData.coverageX=THREE.MathUtils.clamp((p.userData.coverageX*.55)+(predictedX*.45),-4.1,4.1);
-    }else p.userData.coverageX=p.userData.baseX;
+      p.userData.coverageX=THREE.MathUtils.clamp(
+        p.userData.coverageX*.55+predictedX*.45,-4.1,4.1
+      );
+    }else{
+      p.userData.coverageX=p.userData.baseX;
+    }
+
+    // Front-row players protect the net; back-row players cover more deeply.
+    // Spacing is intentionally modest so formation remains recognizable.
+    const spacingScale=isPrimary?0:(role==='MB'||role==='S'||role==='SETTER'?.22:.34);
+    p.userData.spacingX=THREE.MathUtils.clamp(-commitment*spacingScale,-.9,.9);
   });
 }
 function aiBlock(){
