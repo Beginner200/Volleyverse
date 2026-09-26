@@ -1,13 +1,20 @@
-# VOLLEYVERSE Authoritative Volleyball Simulation
+# VOLLEYVERSE Full 6v6 Server Simulation
 
-The server now owns the prototype rally simulation.
+The authoritative prototype now models 12 player slots: 6 home + 6 away.
 
-- Player positions are server-authoritative.
-- Client inputs are validated/clamped before simulation.
-- Serve, pass, set, spike, dig and block actions are processed server-side.
-- Ball velocity/gravity and court-boundary point detection run server-side.
-- Sets use 25 points (15 in set 5), win-by-2, first to 3 sets.
-- Server emits match snapshots at 20 Hz.
-- Disconnects receive a 15-second grace period before AI takeover.
+### Added
+- Six player slots per team
+- Setter / OH / MB / Opposite role metadata
+- Rotation state and rotation after side-out
+- Formation starting positions
+- Per-player character IDs from client roster selection
+- Server-owned player movement
+- Server-owned rally touch counts (max 3 per team)
+- Setter-aware set validation
+- Serve ownership validation
+- Net crossing/boundary checks
+- Block interaction near the net
+- Best-of-5 set progression
+- Snapshot schema v3
 
-This is still a prototype simulation: collision/net physics, six-player formations, detailed volleyball rules, authentication, persistence and anti-cheat remain future backend work.
+This remains a prototype simulation. Detailed rotation legality, libero replacement rules, realistic collision/trajectory modeling, attack-line restrictions, service zones, and complete 12-player online identity mapping remain later refinements.
