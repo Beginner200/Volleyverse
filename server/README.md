@@ -1,11 +1,5 @@
-# VOLLEYVERSE Party Matchmaking
+# Party-aware 6v6 matchmaking
 
-Party identity is now connected to the realtime server.
+Matchmaking now treats each party as an atomic queue unit. Parties can contain 1–6 players and remain together on one team. The queue combines parties and solo players until both teams have six slots, rejects duplicate party queue entries, and removes matched groups atomically.
 
-- Authenticated players can create/join/leave server parties.
-- Parties support up to 6 members.
-- Party leader controls matchmaking entry.
-- Account records retain partyId.
-- Queue requests carry party membership into the server session foundation.
-
-The next backend refinement can make a complete party atomically occupy one 6-player team while matching against another party or solo players.
+Production skill/region balancing and persistent queue state remain future work.
