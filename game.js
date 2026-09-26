@@ -26,17 +26,70 @@ function createScene(){
     state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0);
     state.renderer=new THREE.WebGLRenderer({antialias:!state.mobile,powerPreference:state.mobile?'low-power':'default',alpha:false});state.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,state.mobile?1:1.25));state.renderer.setSize(Math.max(innerWidth,1),Math.max(innerHeight,1),false);state.renderer.shadowMap.enabled=false;state.renderer.outputColorSpace=THREE.SRGBColorSpace;state.renderer.domElement.style.width='100%';state.renderer.domElement.style.height='100%';wrap.innerHTML='';wrap.appendChild(state.renderer.domElement);
     state.scene.add(new THREE.HemisphereLight(0xdff5ff,0x16304a,2.4));const key=new THREE.DirectionalLight(0xffffff,2.7);key.position.set(4,12,8);state.scene.add(key);const fill=new THREE.DirectionalLight(0x6ad8ff,1.5);fill.position.set(-8,6,-6);state.scene.add(fill);
-    buildCourt();buildTeams();buildBall();applyArenaVisual({id:document.body.dataset.arena||'skyline'});if(controlMode()==='lock'){const saved=Number(localStorage.getItem('volleyverseLockPlayer')||0);controlledIndex=THREE.MathUtils.clamp(saved,0,5)}updateControlled();applyGameplayCamera(localStorage.getItem('volleyverseCamera')||'broadcast');updateHUD();state.ready=true;resetBall();resize();startGameLoop();return true;
+    buildCourt();buildStadium();buildTeams();buildBall();applyArenaVisual({id:document.body.dataset.arena||'skyline'});if(controlMode()==='lock'){const saved=Number(localStorage.getItem('volleyverseLockPlayer')||0);controlledIndex=THREE.MathUtils.clamp(saved,0,5)}updateControlled();applyGameplayCamera(localStorage.getItem('volleyverseCamera')||'broadcast');updateHUD();state.ready=true;resetBall();resize();startGameLoop();return true;
   }catch(err){console.error('VOLLEYVERSE 3D initialization failed:',err);showError('Your browser could not create the 3D graphics. Try Chrome again after reloading.');return false}
 }
 function buildCourt(){
-  const s=state.scene;const floor=new THREE.Mesh(new THREE.BoxGeometry(COURT_LENGTH,.2,COURT_WIDTH),new THREE.MeshStandardMaterial({color:0x17658f,roughness:.72}));floor.position.y=-.12;s.add(floor);
-  const free=new THREE.Mesh(new THREE.PlaneGeometry(24,15),new THREE.MeshBasicMaterial({color:0x0b2239,side:THREE.DoubleSide}));free.rotation.x=-Math.PI/2;free.position.y=-.215;s.add(free);
-  const lineMat=new THREE.MeshBasicMaterial({color:0xffffff});const line=(x,z,w,d)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,.035,d),lineMat);m.position.set(x,.015,z);s.add(m)};
-  line(0,-HALF_WIDTH,COURT_LENGTH,.08);line(0,HALF_WIDTH,COURT_LENGTH,.08);line(-HALF_LENGTH,0,.08,COURT_WIDTH);line(HALF_LENGTH,0,.08,COURT_WIDTH);line(0,-ATTACK_LINE,COURT_LENGTH,.055);line(0,ATTACK_LINE,COURT_LENGTH,.055);line(0,0,.055,COURT_WIDTH);
-  const poleMat=new THREE.MeshStandardMaterial({color:0xe8f3fa,metalness:.5,roughness:.3});[-4.65,4.65].forEach(x=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3.6,12),poleMat);p.position.set(x,1.8,0);s.add(p)});
-  const net=new THREE.Mesh(new THREE.BoxGeometry(9.3,2.43,.04),new THREE.MeshBasicMaterial({color:0xeaf4fa,transparent:true,opacity:.32,wireframe:true}));net.position.y=1.215;s.add(net);
-  const back=new THREE.Mesh(new THREE.PlaneGeometry(36,16),new THREE.MeshBasicMaterial({color:0x0b2239,side:THREE.DoubleSide}));back.position.set(0,5,-8);s.add(back);
+  const s=state.scene;
+  const freeMat=new THREE.MeshStandardMaterial({color:0x075aa8,roughness:.68,metalness:.02});
+  const free=new THREE.Mesh(new THREE.PlaneGeometry(28,18),freeMat);free.rotation.x=-Math.PI/2;free.position.y=-.22;s.add(free);
+  const courtMat=new THREE.MeshStandardMaterial({color:0xd98635,roughness:.52,metalness:.02});
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(COURT_LENGTH,.2,COURT_WIDTH),courtMat);floor.position.y=-.12;s.add(floor);
+  const courtGlow=new THREE.Mesh(new THREE.PlaneGeometry(17.5,8.5),new THREE.MeshBasicMaterial({color:0xf2a24c,transparent:true,opacity:.18}));
+  courtGlow.rotation.x=-Math.PI/2;courtGlow.position.y=-.01;s.add(courtGlow);
+  const lineMat=new THREE.MeshBasicMaterial({color:0xffffff});
+  const line=(x,z,w,d,y=.015)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,.035,d),lineMat);m.position.set(x,y,z);s.add(m)};
+  line(0,-HALF_WIDTH,COURT_LENGTH,.08);line(0,HALF_WIDTH,COURT_LENGTH,.08);line(-HALF_LENGTH,0,.08,COURT_WIDTH);line(HALF_LENGTH,0,.08,COURT_WIDTH);
+  line(0,-ATTACK_LINE,COURT_LENGTH,.055);line(0,ATTACK_LINE,COURT_LENGTH,.055);line(0,0,.055,COURT_WIDTH);
+  const poleMat=new THREE.MeshStandardMaterial({color:0x0755a8,metalness:.35,roughness:.3});
+  [-4.65,4.65].forEach(x=>{
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,.18,12),poleMat);base.position.set(x,.09,0);s.add(base);
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3.6,12),poleMat);p.position.set(x,1.8,0);s.add(p);
+  });
+  const netMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55,wireframe:true});
+  const net=new THREE.Mesh(new THREE.BoxGeometry(9.3,2.43,.04),netMat);net.position.y=1.215;s.add(net);
+  const tape=new THREE.Mesh(new THREE.BoxGeometry(9.45,.11,.07),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3}));
+  tape.position.y=2.45;s.add(tape);
+}
+function makeBanner(text,accent=0x1fd7ff){
+  const canvas=document.createElement('canvas');canvas.width=900;canvas.height=220;const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#063d78';ctx.fillRect(0,0,900,220);
+  ctx.fillStyle='#0b67bd';ctx.fillRect(18,18,864,184);
+  ctx.strokeStyle='#49dcff';ctx.lineWidth=7;ctx.strokeRect(18,18,864,184);
+  ctx.fillStyle='#f7fbff';ctx.font='900 58px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,450,112);
+  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+  return new THREE.Mesh(new THREE.PlaneGeometry(10.5,2.55),new THREE.MeshBasicMaterial({map:tex,transparent:false}));
+}
+function buildStadium(){
+  const s=state.scene;
+  const wallMat=new THREE.MeshStandardMaterial({color:0x06315d,roughness:.82});
+  const rear=new THREE.Mesh(new THREE.BoxGeometry(30,8,.5),wallMat);rear.position.set(0,4,-8.8);s.add(rear);
+  const sideMat=new THREE.MeshStandardMaterial({color:0x084b87,roughness:.78});
+  [-1,1].forEach(side=>{const wall=new THREE.Mesh(new THREE.BoxGeometry(.45,6,24),sideMat);wall.position.set(side*14,3,-1);s.add(wall)});
+  const banner1=makeBanner('SPIKE DREAMS TOGETHER');banner1.position.set(0,5.8,-8.48);s.add(banner1);
+  const banner2=makeBanner('VOLLEYVERSE');banner2.scale.set(.68,.68,.68);banner2.position.set(-9,4.5,-8.42);s.add(banner2);
+  const banner3=makeBanner('BETTER TOGETHER');banner3.scale.set(.68,.68,.68);banner3.position.set(9,4.5,-8.42);s.add(banner3);
+  const seatMat=new THREE.MeshStandardMaterial({color:0x0a5799,roughness:.9});
+  const peopleMat=[0x28b8e8,0xffbf3f,0xff4f78,0x7b6cff,0x53df91];
+  for(let row=0;row<3;row++){
+    for(let i=0;i<13;i++){
+      const x=-10.8+i*1.8+(row%2)*.35;
+      const z=-6.4-row*1.05;
+      const seat=new THREE.Mesh(new THREE.BoxGeometry(1.35,.22,.65),seatMat);seat.position.set(x,.55+row*.72,z);s.add(seat);
+      const color=peopleMat[(i+row)%peopleMat.length];
+      const person=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.25,4,6),new THREE.MeshStandardMaterial({color,roughness:.8}));
+      person.position.set(x,.95+row*.72,z-.08);s.add(person);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),new THREE.MeshStandardMaterial({color:0xf0b18b,roughness:.85}));
+      head.position.set(x,1.24+row*.72,z-.08);s.add(head);
+    }
+  }
+  const lightMat=new THREE.MeshBasicMaterial({color:0xdff8ff});
+  [-11,-5.5,0,5.5,11].forEach(x=>{
+    const bar=new THREE.Mesh(new THREE.BoxGeometry(2.8,.08,.08),lightMat);bar.position.set(x,9,-6.8);s.add(bar);
+    [-.9,.9].forEach(dx=>{const lamp=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),new THREE.MeshBasicMaterial({color:0xffffff}));lamp.position.set(x+dx,8.88,-6.7);s.add(lamp)});
+  });
+  const archMat=new THREE.MeshStandardMaterial({color:0x0a6ab2,roughness:.55,metalness:.25});
+  [-12,12].forEach(x=>{const arch=new THREE.Mesh(new THREE.BoxGeometry(.35,8,.35),archMat);arch.position.set(x,4,-5.5);s.add(arch)});
 }
 function createPlayer(color,name,x,z,home,position,stats={}){
   const g=new THREE.Group();g.position.set(x,0,z);
@@ -56,7 +109,7 @@ function createPlayer(color,name,x,z,home,position,stats={}){
   [-.15,.15].forEach(sx=>{const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.30,6,8),dark);thigh.position.set(sx,.43,0);g.add(thigh);const shin=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.34,6,8),skin);shin.position.set(sx,.18,0);g.add(shin);const shoe=new THREE.Mesh(new THREE.BoxGeometry(.22,.11,.38),white);shoe.position.set(sx,.035,0);g.add(shoe);const sole=new THREE.Mesh(new THREE.BoxGeometry(.23,.035,.40),accent);sole.position.set(sx,0,0);g.add(sole);legs.push({thigh,shin,shoe})});
   const number=new THREE.Mesh(new THREE.PlaneGeometry(.18,.24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,side:THREE.DoubleSide}));number.position.set(0,1.08,home ? .25 : -.25);number.rotation.y=home?0:Math.PI;g.add(number);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.48,.57,32),new THREE.MeshBasicMaterial({color:0x54e7ff,transparent:true,opacity:.9,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.025;g.add(ring);const arrow=new THREE.Mesh(new THREE.ConeGeometry(.11,.28,4),new THREE.MeshBasicMaterial({color:0x54e7ff}));arrow.rotation.x=Math.PI;arrow.position.y=2.45;g.add(arrow);
-  g.userData={name,home,position,stats,baseX:x,baseZ:z,speed:3.9+(stats.speed||0)*.012,arms,legs,ring,arrow,action:0,cooldown:0,moveX:0,moveZ:0,phase:Math.random()*Math.PI*2,stance:0,jumpY:0,jumpV:0,aiTargetX:x,aiTargetZ:z,coverageX:x};state.scene.add(g);return g;
+  const numberMap={Astra:'1',Kairo:'5',Nova:'7',Rex:'4',Mira:'3',Zen:'6',Vex:'2',Luna:'8',Orion:'10',Kai:'11',Sora:'9',Axel:'12'};\n  const nCanvas=document.createElement('canvas');nCanvas.width=128;nCanvas.height=160;const nctx=nCanvas.getContext('2d');nctx.fillStyle='#ffffff';nctx.font='900 112px Arial';nctx.textAlign='center';nctx.textBaseline='middle';nctx.fillText(numberMap[name]||'1',64,78);const nTex=new THREE.CanvasTexture(nCanvas);nTex.colorSpace=THREE.SRGBColorSpace;number.material.map=nTex;number.material.needsUpdate=true;\n  g.scale.setScalar(1.12);\n  g.userData={name,home,position,stats,baseX:x,baseZ:z,speed:3.9+(stats.speed||0)*.012,arms,legs,ring,arrow,action:0,cooldown:0,moveX:0,moveZ:0,phase:Math.random()*Math.PI*2,stance:0,jumpY:0,jumpV:0,aiTargetX:x,aiTargetZ:z,coverageX:x};state.scene.add(g);return g;
 }
 function matchStats(character){
   if(!character)return{};
@@ -489,7 +542,7 @@ function applyGameplayCamera(mode){
   if(m==='player'&&target){state.camera.position.set(target.position.x+5.2,4.4,target.position.z+6.4);state.camera.lookAt(target.position.x,1.0,target.position.z)}
   else if(m==='sideline'){state.camera.position.set(12.8,4.8,0);state.camera.lookAt(0,1.0,0)}
   else if(m==='top'){state.camera.position.set(0,18.5,0.2);state.camera.lookAt(0,0,0)}
-  else{state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0)}
+  else{state.camera.position.set(0,11.2,20.5);state.camera.lookAt(0,0.85,0)}
 }
 function applyArenaVisual(a){
   if(!state.scene||!a)return;
