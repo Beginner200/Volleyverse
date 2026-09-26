@@ -542,7 +542,7 @@ function applyGameplayCamera(mode){
   if(m==='player'&&target){state.camera.position.set(target.position.x+5.2,4.4,target.position.z+6.4);state.camera.lookAt(target.position.x,1.0,target.position.z)}
   else if(m==='sideline'){state.camera.position.set(12.8,4.8,0);state.camera.lookAt(0,1.0,0)}
   else if(m==='top'){state.camera.position.set(0,18.5,0.2);state.camera.lookAt(0,0,0)}
-  else{state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0)}
+  else{state.camera.position.set(0,11.2,20.5);state.camera.lookAt(0,0.85,0)}
 }
 function applyArenaVisual(a){
   if(!state.scene||!a)return;
