@@ -1,0 +1,44 @@
+/* VOLLEYVERSE — ARCADE VOLLEYBALL UI REDESIGN */
+:root{--vb:#0878d1;--vc:#42dcff;--vo:#ff8a21;--vg:#ffc83d;--vr:#e83d62}
+#canvasWrap{background:radial-gradient(ellipse at 50% 8%,rgba(71,193,255,.24),transparent 28%),radial-gradient(ellipse at 15% 12%,rgba(255,255,255,.13),transparent 13%),radial-gradient(ellipse at 85% 12%,rgba(255,255,255,.13),transparent 13%),linear-gradient(180deg,#062b56,#03182f 48%,#020914)!important}
+#canvasWrap:before{content:"";position:absolute;inset:0 0 72%;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 8% 8%,rgba(255,255,255,.3),transparent 9%),radial-gradient(ellipse at 92% 8%,rgba(255,255,255,.3),transparent 9%),linear-gradient(180deg,rgba(3,31,63,.1),transparent)}
+#canvasWrap:after{background:linear-gradient(180deg,rgba(1,10,24,.2),transparent 24%,transparent 68%,rgba(0,8,19,.58)),radial-gradient(ellipse at center,transparent 38%,rgba(0,8,20,.32) 100%)!important}
+#hud{padding:12px 28px!important}
+#hud .brand{display:flex;align-items:center;gap:8px;font-size:15px!important;font-weight:1000;letter-spacing:.16em;color:#fff;text-shadow:0 3px 16px #000}
+#hud .brand:before{content:"🏐";display:grid;place-items:center;width:31px;height:31px;border-radius:10px;background:linear-gradient(145deg,#159de4,#0755a4);border:1px solid rgba(255,255,255,.55);box-shadow:0 0 20px rgba(52,209,255,.25);font-size:17px}
+#hud .scoreboard{min-width:330px!important;padding:8px 18px!important;gap:18px!important;border:2px solid rgba(159,228,255,.35)!important;border-radius:18px!important;background:linear-gradient(105deg,rgba(5,68,133,.95),rgba(4,28,62,.96) 50%,rgba(116,22,46,.94))!important;box-shadow:0 12px 38px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.18)!important}
+#hud .scoreboard>div:first-child .team-name{color:#74dcff}#hud .scoreboard>div:last-child .team-name{color:#ff9db0}
+#hud .scoreboard strong{font-size:28px!important;font-weight:1000;text-shadow:0 3px 10px rgba(0,0,0,.45)}
+#hud .scoreboard .sets{min-width:76px;text-align:center;padding:5px 8px;border-radius:9px;background:rgba(0,0,0,.2);color:#fff!important;font-weight:900}
+#hud #pauseBtn{width:44px!important;height:44px!important;border-radius:13px!important;background:linear-gradient(145deg,#0d65a4,#031f40)!important;border:1px solid rgba(169,233,255,.45)!important;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#tip{top:79px!important;padding:8px 15px!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:999px!important;background:linear-gradient(90deg,rgba(4,48,91,.9),rgba(7,81,132,.78))!important;color:#e8fbff!important;font-weight:900;box-shadow:0 8px 25px rgba(0,0,0,.32)!important}
+#controlledPlayer{top:112px!important;padding:6px 12px!important;border-radius:999px!important;background:rgba(2,24,50,.86)!important;border:1px solid rgba(255,255,255,.18)!important;color:#fff!important;font-weight:900}
+#controlledPlayer:before{content:"★ ";color:var(--vg)}
+#controls{height:205px!important;padding:10px 24px 20px!important;background:linear-gradient(transparent,rgba(1,12,28,.35) 20%,rgba(1,8,20,.97))!important}
+#controls .joystick{width:126px!important;height:126px!important;border:3px solid rgba(190,241,255,.72)!important;background:radial-gradient(circle,rgba(46,183,255,.24) 0 35%,rgba(4,42,78,.82) 36% 70%,rgba(1,15,31,.9) 71%)!important;box-shadow:0 10px 30px rgba(0,0,0,.6),0 0 0 5px rgba(49,190,255,.08),0 0 35px rgba(36,191,255,.2),inset 0 0 25px rgba(89,220,255,.18)!important}
+#controls .joystick:before{inset:15px!important;border:2px solid rgba(201,244,255,.18)!important}
+#controls .joystick #stick{width:56px!important;height:56px!important;left:32px!important;top:32px!important;background:radial-gradient(circle at 28% 22%,#fff 0 7%,#9cecff 25%,#238fe2 62%,#123c83 100%)!important;border:2px solid #eafcff!important;box-shadow:0 8px 20px rgba(0,0,0,.55),0 0 28px rgba(48,214,255,.55),inset 0 0 12px rgba(255,255,255,.4)!important}
+#controls .action{border:2px solid rgba(255,255,255,.72)!important;box-shadow:0 8px 20px rgba(0,0,0,.58),inset 0 0 15px rgba(255,255,255,.14)!important}
+#controls #passBtn{background:radial-gradient(circle at 30% 18%,#eafff7,#54d8a6 28%,#147064 67%,#073837)!important}
+#controls #setBtn{background:radial-gradient(circle at 30% 18%,#fff3ff,#b07cff 28%,#5533a8 67%,#25134e)!important}
+#controls #blockBtn{background:radial-gradient(circle at 30% 18%,#fffce5,#ffd166 28%,#a25a12 67%,#4a2608)!important}
+#controls #diveBtn{background:radial-gradient(circle at 30% 18%,#eef8ff,#69b5ff 28%,#24539a 67%,#10254e)!important}
+#controls #serveBtn{background:radial-gradient(circle at 30% 18%,#efffff,#54e9ff 28%,#1165ba 67%,#092d64)!important}
+#controls #spikeBtn{width:94px!important;height:94px!important;background:radial-gradient(circle at 30% 18%,#fff2f6,#ff86ac 25%,#c6326b 62%,#4d143c 100%)!important;border:3px solid #fff!important;box-shadow:0 10px 26px rgba(0,0,0,.6),0 0 0 5px rgba(255,105,160,.09),0 0 38px rgba(255,69,143,.38),inset 0 0 22px rgba(255,255,255,.17)!important}
+#controls #spikeBtn:before{font-size:38px!important}
+#controls #switchBtn{background:linear-gradient(145deg,#e4ffff,#35c4eb 35%,#1669af 70%,#102c67)!important}
+#controls .action:after{color:#fff!important;font-weight:1000!important;text-shadow:0 2px 7px rgba(0,0,0,.9)!important}
+#controls #spikeBtn:after{content:"SPIKE"!important}#controls #serveBtn:after{content:"SERVE"!important}
+#overlay{background:linear-gradient(180deg,rgba(0,10,25,.18),rgba(0,12,28,.42))!important}
+#overlay .panel{border:2px solid rgba(126,222,255,.3)!important;border-radius:25px!important;background:linear-gradient(145deg,rgba(5,56,101,.97),rgba(2,21,44,.98))!important;box-shadow:0 25px 80px rgba(0,0,0,.62),0 0 45px rgba(25,178,255,.12)!important}
+#overlay .panel:before{content:"🏐";display:grid;place-items:center;width:48px;height:48px;margin:0 auto 5px;border-radius:50%;background:linear-gradient(145deg,#fff,#8edfff);color:#075aa1;font-size:25px;box-shadow:0 0 25px rgba(66,220,255,.3)}
+#overlay .primary{border:1px solid rgba(255,255,255,.45)!important;background:linear-gradient(100deg,#0789d8,#0757aa 62%,#e86a18)!important}
+#mainMenu{background:radial-gradient(circle at 76% 25%,rgba(255,137,33,.24),transparent 22%),radial-gradient(circle at 35% 58%,rgba(44,210,255,.22),transparent 27%),linear-gradient(135deg,#02152d,#07508b 55%,#021426)!important}
+#mainMenu .logo-mark{background:linear-gradient(145deg,#0b8bd1,#06447e)!important;border-color:#a9efff!important;font-size:0}
+#mainMenu .logo-mark:after{content:"🏐";font-size:18px}
+#mainMenu .hero-copy h1 em{background:linear-gradient(90deg,#fff,#65eaff 55%,#ffb04e)!important;-webkit-background-clip:text!important;background-clip:text!important}
+#mainMenu .menu-btn{background:linear-gradient(145deg,rgba(6,61,112,.9),rgba(3,25,51,.94))!important;border-color:rgba(157,230,255,.25)!important}
+#mainMenu .menu-btn.featured{background:radial-gradient(circle at 35% 28%,rgba(111,231,255,.35),rgba(4,82,142,.94) 52%,rgba(4,29,56,.98))!important;border-color:rgba(223,249,255,.8)!important}
+#mainMenu .menu-grid .menu-btn:nth-child(odd){border-top:2px solid rgba(55,215,255,.65)}
+#mainMenu .menu-grid .menu-btn:nth-child(even){border-top:2px solid rgba(255,142,43,.7)}
+@media (orientation:landscape) and (max-height:600px){#hud{padding:7px 14px!important}#hud .brand{font-size:11px!important}#hud .brand:before{width:25px;height:25px;font-size:14px}#hud .scoreboard{min-width:270px!important;padding:6px 12px!important;gap:12px!important}#hud .scoreboard strong{font-size:21px!important}#hud #pauseBtn{width:34px!important;height:34px!important}#tip{top:52px!important;font-size:7px!important}#controlledPlayer{top:76px!important;font-size:7px!important}#controls{height:170px!important;padding:6px 13px 11px!important}#controls .joystick{width:105px!important;height:105px!important}#controls .joystick #stick{width:48px!important;height:48px!important;left:27px!important;top:27px!important}#controls #spikeBtn{width:78px!important;height:78px!important}}
