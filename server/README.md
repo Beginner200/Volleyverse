@@ -1,7 +1,11 @@
-# VOLLEYVERSE Online Identity & Authentication
+# VOLLEYVERSE Party Matchmaking
 
-The realtime server now accepts authenticated account identity before matchmaking.
+Party identity is now connected to the realtime server.
 
-Flow: AUTH -> AUTH_OK/token -> QUEUE -> 6v6 session.
+- Authenticated players can create/join/leave server parties.
+- Parties support up to 6 members.
+- Party leader controls matchmaking entry.
+- Account records retain partyId.
+- Queue requests carry party membership into the server session foundation.
 
-The server uses the authenticated account's username, region, selected six-player roster and party ID when building the session. This is a prototype identity layer; production authentication and persistent storage are later milestones.
+The next backend refinement can make a complete party atomically occupy one 6-player team while matching against another party or solo players.
