@@ -77,7 +77,7 @@ class VVPlayerStateManager{
     if(!libero||!outgoing||libero.team!==team||outgoing.team!==team)return {ok:false,reason:'INVALID_LIBERO'};
     if(!libero.liberoEligible||libero.isLibero)return {ok:false,reason:'INVALID_LIBERO_STATE'};
     if(libero.active||!outgoing.active)return {ok:false,reason:'INVALID_ACTIVE_STATE'};
-    if(outgoing.rotationPosition<=3)return {ok:false,reason:'LIBERO_BACK_ROW_ONLY'};
+    if(![1,5,6].includes(outgoing.rotationPosition))return {ok:false,reason:'LIBERO_BACK_ROW_ONLY'};
     if(this.lastLiberoReplacementRally[team]===this.rallyNumber)return {ok:false,reason:'RALLY_NOT_COMPLETED'};
     return {ok:true};
   }
