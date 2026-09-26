@@ -1,20 +1,7 @@
-# VOLLEYVERSE Full 6v6 Server Simulation
+# VOLLEYVERSE Online Identity & Authentication
 
-The authoritative prototype now models 12 player slots: 6 home + 6 away.
+The realtime server now accepts authenticated account identity before matchmaking.
 
-### Added
-- Six player slots per team
-- Setter / OH / MB / Opposite role metadata
-- Rotation state and rotation after side-out
-- Formation starting positions
-- Per-player character IDs from client roster selection
-- Server-owned player movement
-- Server-owned rally touch counts (max 3 per team)
-- Setter-aware set validation
-- Serve ownership validation
-- Net crossing/boundary checks
-- Block interaction near the net
-- Best-of-5 set progression
-- Snapshot schema v3
+Flow: AUTH -> AUTH_OK/token -> QUEUE -> 6v6 session.
 
-This remains a prototype simulation. Detailed rotation legality, libero replacement rules, realistic collision/trajectory modeling, attack-line restrictions, service zones, and complete 12-player online identity mapping remain later refinements.
+The server uses the authenticated account's username, region, selected six-player roster and party ID when building the session. This is a prototype identity layer; production authentication and persistent storage are later milestones.
