@@ -544,7 +544,11 @@ function applyGameplayCamera(mode){
   const target=controlled||homePlayers[0];
   const wx=target?.position.z||0,wz=target?-(target.position.x||0):0;
   if(m==='player'&&target){
-    const p=new THREE.Vector3();target.getWorldPosition(p);
+    const p=new THREE.Vector3();
+    target.getWorldPosition(p);
+    // The court is rendered after a 90° world rotation. In world space,
+    // each team faces along the X axis, so the camera must move along X,
+    // not Z, to stay behind the selected player.
     const behind=target.userData.home?1:-1;
     const distance=6.5;
     state.camera.position.set(p.x+behind*distance,3.25,p.z);
