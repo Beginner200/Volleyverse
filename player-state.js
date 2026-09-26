@@ -93,7 +93,21 @@ class VVPlayerStateManager{
     this.substitutionHistory[team].push({inId:libero.id,outId:outgoing.id,rallyNumber,libero:true});
     return {ok:true,incoming:libero,outgoing,rotationPosition:outgoing.rotationPosition};
   }
-  returnFromLibero(team,liberoId,outId,{rallyNumber=this.rallyNumber}={}){\n    const libero=this.get(liberoId),regular=this.get(outId);\n    if(!libero||!regular||libero.team!==team||regular.team!==team||!libero.isLibero)return {ok:false,reason:'INVALID_LIBERO_RETURN'};\n    if(!libero.active||regular.active)return {ok:false,reason:'INVALID_ACTIVE_STATE'};\n    if(this.lastLiberoReplacementRally[team]===this.rallyNumber)return {ok:false,reason:'RALLY_NOT_COMPLETED'};\n    const rotationPosition=libero.rotationPosition;\n    libero.active=false;libero.substitute=true;libero.isLibero=false;libero.lastReplacedId=null;\n    regular.active=true;regular.substitute=false;regular.rotationPosition=rotationPosition;\n    const activeIndex=this.activeByTeam[team].findIndex(p=>p.id===libero.id);if(activeIndex>=0)this.activeByTeam[team].splice(activeIndex,1,regular);else this.activeByTeam[team].push(regular);\n    this.substitutesByTeam[team]=this.substitutesByTeam[team].filter(p=>p.id!==regular.id);this.substitutesByTeam[team].push(libero);\n    this.lastLiberoReplacementRally[team]=rallyNumber;\n    this.substitutionHistory[team].push({inId:regular.id,outId:libero.id,rallyNumber,liberoReturn:true});\n    return {ok:true,incoming:regular,outgoing:libero,rotationPosition};\n  }\n  removeLibero(team,liberoId,{rallyNumber=this.rallyNumber}={}){
+  returnFromLibero(team,liberoId,outId,{rallyNumber=this.rallyNumber}={}){
+    const libero=this.get(liberoId),regular=this.get(outId);
+    if(!libero||!regular||libero.team!==team||regular.team!==team||!libero.isLibero)return {ok:false,reason:'INVALID_LIBERO_RETURN'};
+    if(!libero.active||regular.active)return {ok:false,reason:'INVALID_ACTIVE_STATE'};
+    if(this.lastLiberoReplacementRally[team]===this.rallyNumber)return {ok:false,reason:'RALLY_NOT_COMPLETED'};
+    const rotationPosition=libero.rotationPosition;
+    libero.active=false;libero.substitute=true;libero.isLibero=false;libero.lastReplacedId=null;
+    regular.active=true;regular.substitute=false;regular.rotationPosition=rotationPosition;
+    const activeIndex=this.activeByTeam[team].findIndex(p=>p.id===libero.id);if(activeIndex>=0)this.activeByTeam[team].splice(activeIndex,1,regular);else this.activeByTeam[team].push(regular);
+    this.substitutesByTeam[team]=this.substitutesByTeam[team].filter(p=>p.id!==regular.id);this.substitutesByTeam[team].push(libero);
+    this.lastLiberoReplacementRally[team]=rallyNumber;
+    this.substitutionHistory[team].push({inId:regular.id,outId:libero.id,rallyNumber,liberoReturn:true});
+    return {ok:true,incoming:regular,outgoing:libero,rotationPosition};
+  }
+  removeLibero(team,liberoId,{rallyNumber=this.rallyNumber}={}){
     const libero=this.get(liberoId||this.liberoByTeam[team]?.id);
     if(!libero||!libero.active||!libero.isLibero)return {ok:false,reason:'LIBERO_NOT_ACTIVE'};
     const outgoing=this.players.get(libero.lastReplacedId);
