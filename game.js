@@ -25,7 +25,7 @@ function createScene(){
     state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0);
     state.renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'default',alpha:false});state.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.35));state.renderer.setSize(Math.max(innerWidth,1),Math.max(innerHeight,1),false);state.renderer.shadowMap.enabled=false;state.renderer.outputColorSpace=THREE.SRGBColorSpace;state.renderer.domElement.style.width='100%';state.renderer.domElement.style.height='100%';wrap.innerHTML='';wrap.appendChild(state.renderer.domElement);
     state.scene.add(new THREE.HemisphereLight(0xdff5ff,0x16304a,2.4));const key=new THREE.DirectionalLight(0xffffff,2.7);key.position.set(4,12,8);state.scene.add(key);const fill=new THREE.DirectionalLight(0x6ad8ff,1.5);fill.position.set(-8,6,-6);state.scene.add(fill);
-    buildCourt();buildTeams();buildBall();if(controlMode()==='lock'){const saved=Number(localStorage.getItem('volleyverseLockPlayer')||0);controlledIndex=THREE.MathUtils.clamp(saved,0,5)}updateControlled();updateHUD();resetBall();state.ready=true;resize();if(!state.running){state.running=true;requestAnimationFrame(loop)}return true;
+    buildCourt();buildTeams();buildBall();applyArenaVisual({id:document.body.dataset.arena||'skyline'});applyGameplayCamera(localStorage.getItem('volleyverseCamera')?.replace(/^./,x=>x)||'broadcast');if(controlMode()==='lock'){const saved=Number(localStorage.getItem('volleyverseLockPlayer')||0);controlledIndex=THREE.MathUtils.clamp(saved,0,5)}updateControlled();updateHUD();resetBall();state.ready=true;resize();if(!state.running){state.running=true;requestAnimationFrame(loop)}return true;
   }catch(err){console.error('VOLLEYVERSE 3D initialization failed:',err);showError('Your browser could not create the 3D graphics. Try Chrome again after reloading.');return false}
 }
 function buildCourt(){
@@ -464,6 +464,23 @@ function joyEnd(e){if(joystickPointerId!==null&&e?.pointerId!==undefined&&e.poin
 controls?.addEventListener('pointerdown',e=>{if(e.target.closest('.action'))return;const half=innerWidth*.52;if(e.clientX<=half)joyStart(e)},{passive:false});controls?.addEventListener('pointermove',joyMove,{passive:false});controls?.addEventListener('pointerup',joyEnd,{passive:false});controls?.addEventListener('pointercancel',joyEnd,{passive:false});controls?.addEventListener('lostpointercapture',joyEnd,{passive:false});
 $('localStart')?.addEventListener('pointerdown',()=>{if(window.VVLocalMultiplayer?.isHost?.()){localSessionStarted=true;window.VVLocalMultiplayer.sendSessionStart?.();tip('LOCAL MATCH • HOST');}});
 window.addEventListener('resize',resize);const observer=new MutationObserver(()=>{if(!state.ready&&!wrap.classList.contains('hidden'))createScene()});observer.observe(wrap,{attributes:true,attributeFilter:['class']});if(!wrap.classList.contains('hidden'))createScene();
+
+function applyGameplayCamera(mode){
+  if(!state.camera)return;
+  const m=String(mode||'broadcast').toLowerCase();
+  const target=controlled||homePlayers[0];
+  if(m==='player'&&target){state.camera.position.set(target.position.x+5.2,4.4,target.position.z+6.4);state.camera.lookAt(target.position.x,1.0,target.position.z)}
+  else if(m==='sideline'){state.camera.position.set(12.8,4.8,0);state.camera.lookAt(0,1.0,0)}
+  else if(m==='top'){state.camera.position.set(0,18.5,0.2);state.camera.lookAt(0,0,0)}
+  else{state.camera.position.set(0,13.2,23.5);state.camera.lookAt(0,0.7,0)}
+}
+function applyArenaVisual(a){
+  if(!state.scene||!a)return;
+  const backgrounds={skyline:0x07182a,royal:0x120b2d,harbor:0x062326,summit:0x241309};
+  state.scene.background=new THREE.Color(backgrounds[a.id]||backgrounds.skyline);
+}
+window.addEventListener('vv-camera-change',e=>applyGameplayCamera(e.detail?.mode));
+window.addEventListener('vv-arena-change',e=>applyArenaVisual(e.detail));
 function getReplayCameraState(){return state?.camera?{position:state.camera.position.toArray(),target:state.controlsTarget?.toArray?.()||[0,0,0]}:{position:[0,8,12],target:[0,0,0]}}
 function applyReplayFrame(f,mode='BROADCAST'){if(!f)return;const ps=[...homePlayers,...awayPlayers];(f.players||[]).forEach((p,i)=>{const obj=ps[i];if(obj){obj.position.x=p.x;obj.position.z=p.z;obj.position.y=p.y||0;obj.userData.action=p.action||0}});if(f.ball&&ball){ball.position.set(f.ball.x,f.ball.y,f.ball.z)}if(state?.camera){let targetX=0,targetY=1,targetZ=0;if(mode==='FOLLOW BALL'&&f.ball){targetX=f.ball.x;targetY=f.ball.y;targetZ=f.ball.z}else if(mode==='PLAYER LOCK'&&f.players?.[0]){targetX=f.players[0].x;targetY=1;targetZ=f.players[0].z}else if(mode==='ACTION CAM'){const q=f.ball||f.players?.[0];if(q){targetX=q.x;targetY=q.y||1;targetZ=q.z}}if(mode==='BROADCAST'){state.camera.position.set(0,7.5,12)}else{state.camera.position.set(targetX+5.5,targetY+4.2,targetZ+7.5)}state.camera.lookAt(targetX,targetY,targetZ)}if(state?.renderer&&state?.scene&&state?.camera)state.renderer.render(state.scene,state.camera)}
 window.VVReplayGame={getCamera:()=>getReplayCameraState(),getScene:()=>state?.scene||null,getPlayers:()=>[...homePlayers,...awayPlayers],getBall:()=>ball,applyFrame:applyReplayFrame,show3D:()=>{['hud','tip','controlledPlayer','canvasWrap'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));document.getElementById('overlay')?.classList.add('hidden');if(!state.ready)createScene()}};
