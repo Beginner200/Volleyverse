@@ -9,8 +9,8 @@ const grant=(won)=>{
   const careerXP=won?100:40;
   const seasonXP=won?150:75;
   const battlePassXP=won?200:100;
-  if(window.VVEconomy?.addCoins)window.VVEconomy.addCoins(coins);
-  if(window.VVEconomy?.addGems)window.VVEconomy.addGems(gems);
+  if(window.VVOnlineClient?.isConnected?.()){window.VVOnlineClient.grantReward?.('match_'+Date.now(),coins,gems).catch(()=>{});}else if(window.VVEconomy?.addCoins)window.VVEconomy.addCoins(coins);
+  if(!window.VVOnlineClient?.isConnected?.()&&window.VVEconomy?.addGems)window.VVEconomy.addGems(gems);
   if(window.VVCareer?.addXP)window.VVCareer.addXP(careerXP);
   if(window.VVSeason?.addXP)window.VVSeason.addXP(seasonXP);
   if(window.VVBattlePass?.addXP)window.VVBattlePass.addXP(battlePassXP);
