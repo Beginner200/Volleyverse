@@ -14,6 +14,10 @@
     const a=document.createElement('script');a.src='achievements.js';document.body.appendChild(a);
     const c=document.createElement('script');c.src='customization.js';document.body.appendChild(c);
     const s=document.createElement('script');s.src='season.js';document.body.appendChild(s);
+    const recoverCss=['account.css','arena.css','camera.css','party.css'];recoverCss.forEach(h=>{const l=document.createElement('link');l.rel='stylesheet';l.href=h;document.head.appendChild(l)});
+    const recoverScripts=['account.js','arena.js','camera.js','party.js'];recoverScripts.forEach(src=>{const s=document.createElement('script');s.src=src;document.body.appendChild(s)});
+    const recover=[['account','ACCOUNT','Identity & save'],['arena','ARENAS','Choose your match venue'],['camera','CAMERA','Gameplay view'],['party','PARTY','Online team lobby']];recover.forEach(([action,title,sub])=>{if(document.querySelector('[data-action="'+action+'"]'))return;const b=document.createElement('button');b.className='menu-btn';b.dataset.action=action;b.innerHTML='<strong>'+title+'</strong><span>'+sub+'</span>';document.querySelector('.menu-grid')?.appendChild(b);b.addEventListener('click',()=>window[{account:'VVAccount',arena:'VVArena',camera:'VVCamera',party:'VVParty'}[action]]?.open())});
+
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
