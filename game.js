@@ -157,7 +157,7 @@ function applyLocalSnapshot(s){
   if(!localConnected()||localHost()){if(Number.isInteger(s.controlledIndex)&&s.controlledIndex!==controlledIndex){controlledIndex=THREE.MathUtils.clamp(s.controlledIndex,0,5);updateControlled()}}
   updateHUD();
 }
-window.addEventListener('vv-online-session',e=>{const d=e.detail||{};onlineMatchActive=true;localSessionStarted=true;onlineTeam=d.localTeam||'home';onlineSlot=Number.isInteger(d.localSlot)?d.localSlot:-1;localStorage.setItem('volleyverseMatchMode','online');setTimeout(()=>{if(!state.ready)createScene();tip('ONLINE 6V6 • LIVE MATCH');},0)});window.addEventListener('vv-online-snapshot',e=>{if(onlineMatchActive)applyOnlineSnapshot(e.detail||{})});
+window.addEventListener('vv-online-session',e=>{const d=e.detail||{};onlineMatchActive=true;localSessionStarted=true;onlineTeam=d.localTeam||'home';onlineSlot=Number.isInteger(d.localSlot)?d.localSlot:-1;localStorage.setItem('volleyverseMatchMode','online');setTimeout(()=>{if(!state.ready)createScene();tip('ONLINE 6V6 • LIVE MATCH');},0)});window.VVOnlineClient?.on?.('point',m=>{const w=m?.winner==='home'?'HOME':'AWAY';tip('POINT • '+w+(m?.reason?' • '+String(m.reason).replaceAll('_',' '):''));});window.addEventListener('vv-online-snapshot',e=>{if(onlineMatchActive)applyOnlineSnapshot(e.detail||{})});
 window.addEventListener('vv-local-packet',e=>{
   const p=e.detail||{};
   if(p.type==='input'&&localHost()){
