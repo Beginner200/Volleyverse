@@ -190,6 +190,13 @@ function timingFeedback(type){if(!ballState.active||!controlled)return;const [mi
 function skillRating(player,type){const s=player?.userData?.stats||{};const map={pass:'receive',set:'set',spike:'spike',block:'block',dive:'receive',serve:'serve'};return Number(s[map[type]]||75)}
 function skillQuality(player,type,base){const rating=skillRating(player,type);const reaction=Number(player?.userData?.stats?.reaction||75);const speed=Number(player?.userData?.stats?.speed||75);const variance=(Math.random()-.5)*Math.max(.08,(100-rating)/180);return THREE.MathUtils.clamp(base+((rating-75)/100)*.22+(reaction-75)/500+((speed-75)/500)+variance,.45,1.2)}
 function launchTo(x,z,y=.35,forwardSpeed=7.4){const dx=x-ball.position.x,dz=z-ball.position.z;const horizontal=Math.max(Math.hypot(dx,dz),.1);const t=horizontal/forwardSpeed;ballState.v.x=dx/t;ballState.v.z=dz/t;ballState.v.y=((y-ball.position.y)+(5.75*t*t))/t}
+function registerBallContact(team,type,{countTouch=true,cooldown=.25}={}){
+  if(!ballState.active)return false;
+  if(!ballState.teamTouches||typeof ballState.teamTouches!=='object')ballState.teamTouches={home:0,away:0};
+  if(countTouch){ballState.teamTouches[team]=Math.min(3,(ballState.teamTouches[team]||0)+1);ballState.touches=Math.max(0,ballState.touches||0)+1;}
+  ballState.lastTouch=team;ballState.side=team;ballState.lastAction=type;ballState.cooldown=Math.max(ballState.cooldown,cooldown);
+  return true;
+}
 
 // DEVELOPMENT #4 • local Wi-Fi gameplay bridge
 let localLastSeq=0,clientControlledIndex=0,localSessionStarted=false,onlineMatchActive=false,onlineTeam='home',onlineSlot=-1,onlineLastInputAt=0;
@@ -245,7 +252,7 @@ function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters
   else if(type==='spike'){const approach=Math.hypot(controlled.userData.moveX||0,controlled.userData.moveZ||0);const jump=jumpPlayer(controlled,5.15);const quality=skillQuality(controlled,'spike',.92)*(.65+timing*.35)*(.9+Math.min(approach,1)*.1);const lane=THREE.MathUtils.clamp((controlled.position.x+((controlled.userData.moveX||0)*.7)),-4.0,4.0);targetX=THREE.MathUtils.clamp(lane+dx*.55,-4.0,4.0);const targetZ=THREE.MathUtils.clamp(4.0+Math.abs(controlled.position.z)*.02,3.65,4.2);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.5),targetZ,.3,7.4*(.86+quality*.14));ballState.targetX=targetX;ballState.targetZ=targetZ;tip(jump?'SPIKE • APPROACH + JUMP':'SPIKE • ATTACK');}
   else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){jumpPlayer(controlled,4.7);const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);ballState.teamTouches.home=1;tip('BLOCK • CLOSE THE ANGLE')}else return}
   else if(type==='dive'){const quality=skillQuality(controlled,'dive',.86)*(.7+timing*.3);const dir=controlled.userData.moveX||0;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x+dir*.8,-4.25,4.25);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z+.7,-4.35,-.3);controlled.userData.moveX=dir;controlled.userData.moveZ=controlled.userData.moveZ||0;launchTo(controlled.position.x+((Math.random()-.5)*(1-quality)*1.2),-2.2,2.0,4.8+quality*.9);ballState.targetX=controlled.position.x;ballState.targetZ=-2.2;tip(Math.abs(dir)>.35?'DIG • DIRECTIONAL SAVE':'DIG • KEEP THE RALLY ALIVE')}
-  if(type!=='block')ballState.teamTouches.home++;ballState.lastTouch='home';ballState.side='home';ballState.lastAction=type;ballState.cooldown=.25;controlled.userData.action=type==='dive' ? .8 : .55;
+  registerBallContact('home',type,{countTouch:type!=='block',cooldown:.25});controlled.userData.action=type==='dive' ? .8 : .55;
 }
 function jumpPlayer(p,force=4.8){if(!p||p.userData.jumpY>0.02)return false;p.userData.jumpV=force;p.userData.action=Math.max(p.userData.action,.35);return true}
 function updateApproach(dt){
@@ -389,8 +396,7 @@ function defensiveRead(team,players){
   // A defensive touch redirects the ball toward the setter zone instead of instantly attacking.
   const setter=players.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||players[1];
   launchTo(setter.position.x,setter.position.z,2.15,5.7);
-  ballState.teamTouches[team]=Math.min(1,ballState.teamTouches[team]+1);
-  ballState.lastTouch=team;ballState.side=team;ballState.lastAction='dig';ballState.cooldown=.42;
+  registerBallContact(team,'dig',{countTouch:true,cooldown:.42});
   target.userData.action=.65;target.userData.coverageX=predictedX;transitionAfterDefense(team,players);
   tip((home?'TEAM':'RIVALS')+' • DIG → SETTER');
   return true;
@@ -432,7 +438,7 @@ function aiBlock(){
   if(useTriple){const third=partners[1];third.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?1.05:-1.05),-4.15,4.15);third.userData.action=.62}
   // Block angle: a coordinated wall sends the ball back toward the attacking side with a controlled lift.
   ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble ? .1 : 0)+(useTriple ? .06 : 0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble ? .42 : .35));
-  ballState.lastTouch=attackingHome?'away':'home';ballState.side=ballState.lastTouch;ballState.teamTouches[ballState.lastTouch]=0;ballState.cooldown=.5;
+  registerBallContact(attackingHome?'away':'home','block',{countTouch:true,cooldown:.5});
   tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');return true;
 }
 function aiRallyDecision(team,players){
