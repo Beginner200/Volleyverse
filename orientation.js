@@ -1,5 +1,5 @@
 (()=>{
-  const VERSION='20260904-6';
+  const VERSION='20260926-landscape-1';
   const loadTheme=()=>{
     if(!document.getElementById('volleyballTheme')){const css=document.createElement('link');css.id='volleyballTheme';css.rel='stylesheet';css.href=`volleyball-theme.css?v=${VERSION}`;document.head.appendChild(css)}
     if(!document.getElementById('mainMenuTheme')){const css=document.createElement('link');css.id='mainMenuTheme';css.rel='stylesheet';css.href=`main-menu.css?v=${VERSION}`;document.head.appendChild(css)}
@@ -8,13 +8,33 @@
     const controlsCss=document.getElementById('volleyverseControls');
     if(controlsCss) controlsCss.href=`controls.css?v=${VERSION}`;
   };
-  const hide=()=>document.body.classList.remove('portrait-blocked');
+  const isPortrait=()=>window.matchMedia?.('(orientation: portrait)').matches ?? (window.innerHeight>window.innerWidth);
+  const syncNotice=()=>document.body.classList.toggle('portrait-blocked',isPortrait());
   const lockLandscape=async()=>{
-    try{if(document.documentElement.requestFullscreen&&!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(()=>{})}catch(e){}
-    try{if(screen.orientation?.lock)await screen.orientation.lock('landscape')}catch(e){}
-    hide();
+    let fullscreen=false;
+    try{
+      if(document.documentElement.requestFullscreen&&!document.fullscreenElement){
+        await document.documentElement.requestFullscreen({navigationUI:'hide'});
+        fullscreen=true;
+      }
+    }catch(e){}
+    try{
+      if(screen.orientation?.lock) await screen.orientation.lock('landscape');
+    }catch(e){}
+    syncNotice();
+    return fullscreen;
   };
-  loadTheme();hide();lockLandscape();
-  window.addEventListener('resize',hide);screen.orientation?.addEventListener?.('change',hide);
-  const retry=()=>lockLandscape();document.addEventListener('pointerdown',retry,{once:true,passive:true});document.addEventListener('touchstart',retry,{once:true,passive:true});
+  const enterLandscape=async()=>{
+    await lockLandscape();
+    setTimeout(syncNotice,120);
+  };
+  loadTheme();
+  syncNotice();
+  window.VVOrientation={lockLandscape:enterLandscape,sync:syncNotice};
+  document.getElementById('enterLandscape')?.addEventListener('click',enterLandscape);
+  document.addEventListener('pointerdown',enterLandscape,{once:true,passive:true});
+  window.addEventListener('resize',syncNotice);
+  window.addEventListener('orientationchange',syncNotice);
+  screen.orientation?.addEventListener?.('change',syncNotice);
+  document.addEventListener('fullscreenchange',syncNotice);
 })();
