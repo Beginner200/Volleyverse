@@ -127,7 +127,15 @@ function buildTeams(){
   const picked=(saved||defaults).map(id=>roster.find(c=>c.id===id)).filter(Boolean);
   const squad=picked.length===6?picked:defaults.map(id=>roster.find(c=>c.id===id)).filter(Boolean);
   const fallback=[{id:'astra',name:'Astra',position:'OH',color:0x36bfff,stats:{}},{id:'kairo',name:'Kairo',position:'S',color:0x36bfff,stats:{}},{id:'nova',name:'Nova',position:'OPP',color:0x36bfff,stats:{}},{id:'rex',name:'Rex',position:'MB',color:0x36bfff,stats:{}},{id:'mira',name:'Mira',position:'MB',color:0x36bfff,stats:{}},{id:'zen',name:'Zen',position:'L',color:0x36bfff,stats:{}}];
-  const data=squad.length===6?squad:fallback;
+  let data=squad.length===6?squad:fallback;
+  // The libero is managed separately from the six regular starting positions.
+  // If the selected six contains a designated libero, move that player to the bench
+  // and fill the sixth regular slot with an available non-libero character.
+  const selectedLibero=data.find(ch=>ch.position==='L');
+  if(selectedLibero){
+    const replacement=roster.find(ch=>ch.position!=='L'&&!data.some(x=>x.id===ch.id));
+    if(replacement)data=[...data.filter(ch=>ch.id!==selectedLibero.id),replacement];
+  }
   const pos=[[-5.8,-3.45],[-2.2,-3.45],[2.2,-3.45],[-5.8,-1.15],[-2.2,-1.15],[2.2,-1.15]];
   homePlayers=data.map((ch,i)=>{
     const p=createPlayer(ch.color||0x36bfff,ch.name||('Player '+(i+1)),pos[i][0],pos[i][1],true,ch.position||'OH',matchStats(ch));
