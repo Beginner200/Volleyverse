@@ -190,10 +190,23 @@ function timingFeedback(type){if(!ballState.active||!controlled)return;const [mi
 function skillRating(player,type){const s=player?.userData?.stats||{};const map={pass:'receive',set:'set',spike:'spike',block:'block',dive:'receive',serve:'serve'};return Number(s[map[type]]||75)}
 function skillQuality(player,type,base){const rating=skillRating(player,type);const reaction=Number(player?.userData?.stats?.reaction||75);const speed=Number(player?.userData?.stats?.speed||75);const variance=(Math.random()-.5)*Math.max(.08,(100-rating)/180);return THREE.MathUtils.clamp(base+((rating-75)/100)*.22+(reaction-75)/500+((speed-75)/500)+variance,.45,1.2)}
 function launchTo(x,z,y=.35,forwardSpeed=7.4){const dx=x-ball.position.x,dz=z-ball.position.z;const horizontal=Math.max(Math.hypot(dx,dz),.1);const t=horizontal/forwardSpeed;ballState.v.x=dx/t;ballState.v.z=dz/t;ballState.v.y=((y-ball.position.y)+(5.75*t*t))/t}
+function rallyFault(winner,reason){point(winner,reason);return false}
+function validateContact(team,type){
+  if(!ballState.active||rallyLocked)return false;
+  const expectedSide=ball.position.z<0?'home':'away';
+  if(type!=='block'&&team!==expectedSide){rallyFault(team==='home'?'away':'home','WRONG SIDE');return false}
+  if(type!=='block'&&(ballState.teamTouches[team]||0)>=3){rallyFault(team==='home'?'away':'home','FOUR HITS');return false}
+  return true;
+}
 function registerBallContact(team,type,{countTouch=true,cooldown=.25}={}){
-  if(!ballState.active)return false;
+  if(!validateContact(team,type))return false;
   if(!ballState.teamTouches||typeof ballState.teamTouches!=='object')ballState.teamTouches={home:0,away:0};
-  if(countTouch){const nextTouch=Math.min(4,(ballState.teamTouches[team]||0)+1);ballState.teamTouches[team]=nextTouch;ballState.touches=Math.max(0,ballState.touches||0)+1;ballState.rallyPhase=nextTouch===1?'RECEIVE':nextTouch===2?'SET':'ATTACK';}
+  if(countTouch){
+    const nextTouch=(ballState.teamTouches[team]||0)+1;
+    ballState.teamTouches[team]=nextTouch;
+    ballState.touches=Math.max(0,ballState.touches||0)+1;
+    ballState.rallyPhase=nextTouch===1?'RECEIVE':nextTouch===2?'SET':'ATTACK';
+  }
   ballState.lastTouch=team;ballState.side=team;ballState.lastAction=type;ballState.cooldown=Math.max(ballState.cooldown,cooldown);
   return true;
 }
@@ -244,13 +257,13 @@ function action(type){window.VVReplay?.record?.(type,{player:window.VVCharacters
   $('tip')?.classList.remove('timing-ready');
   if(!state.ready||rallyLocked)return;if(type==='serve'){serve();return}if(!ballState.active||ballState.cooldown>0)return;
   const dx=ball.position.x-controlled.position.x,dz=ball.position.z-controlled.position.z;const dy=ball.position.y-(controlled.position.y+1.05);const timing=timingQuality(type);const horizontalDistance=Math.hypot(dx,dz);const verticalDistance=Math.abs(dy);const contactRadius=type==='dive'?1.65:(type==='block'?1.45:1.35);const contactHeight=type==='block'?1.75:1.55;const near=horizontalDistance<=contactRadius&&verticalDistance<=contactHeight;const towardPlayer=ballState.v.x*(-dx)+ballState.v.z*(-dz);const ballApproaching=towardPlayer>-0.35;
-  if(!near||!ballApproaching||ball.position.y<.2||ball.position.y>4.4)return;if(type!=='serve'&&timing<.28){tip('TIMING OFF • WAIT FOR THE BALL');return;}const homeSide=ball.position.z<0;if(!homeSide&&type!=='block')return;if(type!=='block'&&ballState.teamTouches.home>=3){point('away','FOUR HITS');return;}
+  if(!near||!ballApproaching||ball.position.y<.2||ball.position.y>4.4)return;if(type!=='serve'&&timing<.28){tip('TIMING OFF • WAIT FOR THE BALL');return;}const homeSide=ball.position.z<0;if(!homeSide&&type!=='block')return;if(type!=='block'&&!validateContact('home',type))return;
   const touches=ballState.teamTouches.home;if(type==='pass'&&touches!==0)return;if(type==='set'&&touches!==1)return;if(type==='spike'&&touches!==2)return;if(type==='dive'&&touches!==0)return;
   let targetX=THREE.MathUtils.clamp(controlled.position.x+dx*.35,-4.1,4.1);
   if(type==='pass'){const quality=skillQuality(controlled,'pass',.88)*(.72+timing*.28);const setter=homePlayers.find(p=>p.userData.position==='S'||p.userData.position==='SETTER')||homePlayers[1];const dir=controlled.userData.moveX||0;const lead=THREE.MathUtils.clamp(dir*.9,-.9,.9);targetX=THREE.MathUtils.clamp(setter.position.x+lead,-4.0,4.0);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.4),setter.position.z,2.2,5.8*quality);ballState.targetX=targetX;ballState.targetZ=setter.position.z;tip(Math.abs(dir)>.35?'PASS • DIRECTIONAL RECEIVE':'PASS • FIRST TOUCH → SETTER')}
   else if(type==='set'){const quality=skillQuality(controlled,'set',.9)*(.72+timing*.28);const attackers=homePlayers.filter(p=>p.userData.position==='OH'||p.userData.position==='OPP');const dir=controlled.userData.moveX||0;let attacker=attackers[Math.abs(dir)>.25&&attackers[1]?1:0]||homePlayers[2];targetX=THREE.MathUtils.clamp(attacker.position.x+(dir*.45),-4.0,4.0);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.2),attacker.position.z,3.25,5.3*quality);ballState.targetX=targetX;ballState.targetZ=attacker.position.z;tip(Math.abs(dir)>.25?'SET • DIRECTIONAL ATTACK':'SET • SECOND TOUCH → ATTACK')}
   else if(type==='spike'){const approach=Math.hypot(controlled.userData.moveX||0,controlled.userData.moveZ||0);const jump=jumpPlayer(controlled,5.15);const quality=skillQuality(controlled,'spike',.92)*(.65+timing*.35)*(.9+Math.min(approach,1)*.1);const lane=THREE.MathUtils.clamp((controlled.position.x+((controlled.userData.moveX||0)*.7)),-4.0,4.0);targetX=THREE.MathUtils.clamp(lane+dx*.55,-4.0,4.0);const targetZ=THREE.MathUtils.clamp(4.0+Math.abs(controlled.position.z)*.02,3.65,4.2);launchTo(targetX+((Math.random()-.5)*(1-quality)*1.5),targetZ,.3,7.4*(.86+quality*.14));ballState.targetX=targetX;ballState.targetZ=targetZ;tip(jump?'SPIKE • APPROACH + JUMP':'SPIKE • ATTACK');}
-  else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){jumpPlayer(controlled,4.7);const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);ballState.teamTouches.home=1;tip('BLOCK • CLOSE THE ANGLE')}else return}
+  else if(type==='block'){if(ball.position.z>-.9&&ball.position.y>1.25){jumpPlayer(controlled,4.7);const quality=skillQuality(controlled,'block',.9)*(.65+timing*.35);ballState.v.set(dx*.2*quality,5.0+quality*1.4,-Math.abs(ballState.v.z)*(.72+quality*.2)||-6.5);tip('BLOCK • CLOSE THE ANGLE')}else return}
   else if(type==='dive'){const quality=skillQuality(controlled,'dive',.86)*(.7+timing*.3);const dir=controlled.userData.moveX||0;controlled.position.x=THREE.MathUtils.clamp(controlled.position.x+dir*.8,-4.25,4.25);controlled.position.z=THREE.MathUtils.clamp(controlled.position.z+.7,-4.35,-.3);controlled.userData.moveX=dir;controlled.userData.moveZ=controlled.userData.moveZ||0;launchTo(controlled.position.x+((Math.random()-.5)*(1-quality)*1.2),-2.2,2.0,4.8+quality*.9);ballState.targetX=controlled.position.x;ballState.targetZ=-2.2;tip(Math.abs(dir)>.35?'DIG • DIRECTIONAL SAVE':'DIG • KEEP THE RALLY ALIVE')}
   registerBallContact('home',type,{countTouch:type!=='block',cooldown:.25});controlled.userData.action=type==='dive' ? .8 : .55;
 }
@@ -438,7 +451,7 @@ function aiBlock(){
   if(useTriple){const third=partners[1];third.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?1.05:-1.05),-4.15,4.15);third.userData.action=.62}
   // Block angle: a coordinated wall sends the ball back toward the attacking side with a controlled lift.
   ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble ? .1 : 0)+(useTriple ? .06 : 0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble ? .42 : .35));
-  registerBallContact(attackingHome?'away':'home','block',{countTouch:true,cooldown:.5});
+  registerBallContact(attackingHome?'away':'home','block',{countTouch:false,cooldown:.5});
   tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');return true;
 }
 function aiRallyDecision(team,players){
