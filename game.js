@@ -382,6 +382,50 @@ function updateApproach(dt){
   controlled.position.z=THREE.MathUtils.clamp(controlled.position.z,minZ,maxZ);
 }
 function switchPlayer(){if(localConnected()&&!localHost()){window.VVLocalMultiplayer.sendInput({kind:'switch'});return}if(rallyLocked||controlMode()==='lock')return;controlledIndex=(controlledIndex+1)%homePlayers.length;updateControlled();updateHUD();tip('CONTROL • '+controlled.userData.name.toUpperCase());if(!ballState.active)resetBall()}
+function attackDefenseTransitionTarget(p,home,tx,tz){
+  if(!ballState.active)return {x:tx,z:tz};
+  const touches=ballState.teamTouches?.[home?'home':'away']||0;
+  const attacking=ballState.lastTouch===(home?'home':'away');
+  const role=p.userData.position;
+  const frontRow=['OH','OPP','MB'].includes(role);
+  const setter=role==='S'||role==='SETTER';
+  const backRow=['L','LIBERO','OH','OPP'].includes(role);
+
+  // Receiving: spread into three back/front coverage lanes.
+  if(!attacking){
+    if(setter){tz=home?-2.55:2.55;}
+    else if(role==='MB'){tz=home?-1.0:1.0;}
+    else if(role==='L'||role==='LIBERO'){tz=home?-3.55:3.55;}
+    return {x:tx,z:tz};
+  }
+
+  // Our team is transitioning into attack.
+  if(touches===1){
+    // After the first touch, the setter moves toward the play while attackers
+    // begin their approach without all six players collapsing on the ball.
+    if(setter){
+      tx=THREE.MathUtils.clamp(targetX*.32,-2.8,2.8);
+      tz=home?-2.15:2.15;
+    }else if(frontRow){
+      const approachSide=role==='MB'?targetX*.48:targetX*.78;
+      tx=THREE.MathUtils.clamp(p.userData.baseX+(approachSide-p.userData.baseX)*.35,-4.1,4.1);
+      tz=home?-0.72:0.72;
+    }
+  }else if(touches>=2){
+    // During the attack, the chosen attacker approaches while the others
+    // prepare for coverage/recovery.
+    if(frontRow){
+      tx=THREE.MathUtils.clamp(targetX*.72,-4.0,4.0);
+      tz=home?-0.48:0.48;
+    }else if(setter){
+      tz=home?-2.05:2.05;
+    }else if(backRow){
+      tz=home?-3.15:3.15;
+    }
+  }
+  return {x:tx,z:tz};
+}
+
 function roleTarget(p,home,targetX,targetZ){
   const baseX=p.userData.baseX,baseZ=p.userData.baseZ,role=p.userData.position;const side=home?-1:1;let tx=baseX,tz=baseZ;
   // 6v6 formation: preserve role lanes, but anticipate the ball's next
@@ -404,6 +448,9 @@ function roleTarget(p,home,targetX,targetZ){
     if(danger){tx+=THREE.MathUtils.clamp((dangerX-tx)*.28,-1.35,1.35);tz=home?Math.max(-4.2,tz-.28):Math.min(4.2,tz+.28)}
     if(role==='S'||role==='SETTER')tz=home?Math.min(tz,-1.45):Math.max(tz,1.45);
     if(role==='L'||role==='LIBERO')tz=home?Math.min(tz,-2.65):Math.max(tz,2.65);
+
+    const transition=attackDefenseTransitionTarget(p,home,tx,tz);
+    tx=transition.x;tz=transition.z;
   }
   return {x:THREE.MathUtils.clamp(tx,-4.15,4.15),z:home?THREE.MathUtils.clamp(tz,-4.2,-.35):THREE.MathUtils.clamp(tz,.35,4.2),side};
 }
