@@ -63,24 +63,24 @@ function makeBanner(text,accent=0x1fd7ff){
 function buildStadium(){
   const s=state.scene;
   const wallMat=new THREE.MeshStandardMaterial({color:0x06315d,roughness:.82});
-  const rear=new THREE.Mesh(new THREE.BoxGeometry(30,8,.5),wallMat);rear.position.set(0,4,-8.8);s.add(rear);
+  const rear=new THREE.Mesh(new THREE.BoxGeometry(30,2.4,.5),wallMat);rear.position.set(0,1.2,-8.8);s.add(rear);
   const sideMat=new THREE.MeshStandardMaterial({color:0x084b87,roughness:.78});
-  [-1,1].forEach(side=>{const wall=new THREE.Mesh(new THREE.BoxGeometry(.45,6,24),sideMat);wall.position.set(side*14,3,-1);s.add(wall)});
-  const banner1=makeBanner('SPIKE DREAMS TOGETHER');banner1.position.set(0,5.8,-8.48);s.add(banner1);
-  const banner2=makeBanner('VOLLEYVERSE');banner2.scale.set(.68,.68,.68);banner2.position.set(-9,4.5,-8.42);s.add(banner2);
-  const banner3=makeBanner('BETTER TOGETHER');banner3.scale.set(.68,.68,.68);banner3.position.set(9,4.5,-8.42);s.add(banner3);
+  [-1,1].forEach(side=>{const wall=new THREE.Mesh(new THREE.BoxGeometry(.45,2.8,24),sideMat);wall.position.set(side*14,1.4,-1);s.add(wall)});
+  const banner1=makeBanner('SPIKE DREAMS TOGETHER');banner1.position.set(0,3.4,-8.48);s.add(banner1);
+  const banner2=makeBanner('VOLLEYVERSE');banner2.scale.set(.56,.56,.56);banner2.position.set(-9,3.15,-8.42);s.add(banner2);
+  const banner3=makeBanner('BETTER TOGETHER');banner3.scale.set(.56,.56,.56);banner3.position.set(9,3.15,-8.42);s.add(banner3);
   const seatMat=new THREE.MeshStandardMaterial({color:0x0a5799,roughness:.9});
   const peopleMat=[0x28b8e8,0xffbf3f,0xff4f78,0x7b6cff,0x53df91];
   for(let row=0;row<3;row++){
     for(let i=0;i<13;i++){
       const x=-10.8+i*1.8+(row%2)*.35;
       const z=-6.4-row*1.05;
-      const seat=new THREE.Mesh(new THREE.BoxGeometry(1.35,.22,.65),seatMat);seat.position.set(x,.55+row*.72,z);s.add(seat);
+      const seat=new THREE.Mesh(new THREE.BoxGeometry(1.35,.22,.65),seatMat);seat.position.set(x,.38+row*.55,z);s.add(seat);
       const color=peopleMat[(i+row)%peopleMat.length];
       const person=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.25,4,6),new THREE.MeshStandardMaterial({color,roughness:.8}));
-      person.position.set(x,.95+row*.72,z-.08);s.add(person);
+      person.position.set(x,.72+row*.55,z-.08);s.add(person);
       const head=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),new THREE.MeshStandardMaterial({color:0xf0b18b,roughness:.85}));
-      head.position.set(x,1.24+row*.72,z-.08);s.add(head);
+      head.position.set(x,1.02+row*.55,z-.08);s.add(head);
     }
   }
   const lightMat=new THREE.MeshBasicMaterial({color:0xdff8ff});
