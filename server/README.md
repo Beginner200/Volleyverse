@@ -1,5 +1,12 @@
-# Party-aware 6v6 matchmaking
+# VOLLEYVERSE Smart Matchmaking
 
-Matchmaking now treats each party as an atomic queue unit. Parties can contain 1–6 players and remain together on one team. The queue combines parties and solo players until both teams have six slots, rejects duplicate party queue entries, and removes matched groups atomically.
+Adds server-side matchmaking metadata for:
+- skill/rating gap
+- connection ping gap
+- preferred region
+- queue wait time
+- expanding compatibility windows
 
-Production skill/region balancing and persistent queue state remain future work.
+Initial rating window starts at 150 and expands with wait time up to 600. Ping compatibility starts around 80 ms and expands with wait time up to 180 ms. SEA/ASIA/GLOBAL-style region compatibility is supported.
+
+This is a prototype matching policy, not a production competitive algorithm.
