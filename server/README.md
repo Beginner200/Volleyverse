@@ -1,12 +1,14 @@
-# VOLLEYVERSE Smart Matchmaking
+# VOLLEYVERSE Persistent Competitive State
 
-Adds server-side matchmaking metadata for:
-- skill/rating gap
-- connection ping gap
-- preferred region
-- queue wait time
-- expanding compatibility windows
+Server-side competitive state now tracks:
+- season ID
+- rating
+- wins/losses
+- win streak
+- sets won/lost
+- points won/lost
+- recent match history
 
-Initial rating window starts at 150 and expands with wait time up to 600. Ping compatibility starts around 80 ms and expands with wait time up to 180 ms. SEA/ASIA/GLOBAL-style region compatibility is supported.
+Finished authoritative matches record results for every authenticated account in the 6v6 session. Clients can request RANKED_STATE over the authenticated WebSocket connection.
 
-This is a prototype matching policy, not a production competitive algorithm.
+This is an in-memory prototype persistence layer. A production deployment should move this state to a database before release.
