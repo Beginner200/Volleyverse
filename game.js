@@ -241,21 +241,35 @@ function getServer(team){
   return players.find(p=>p.userData.rotationPosition===1)||players[0];
 }
 function servicePositionValid(team){
+  // Rotation slots are the authoritative pre-serve positions. During live play,
+  // AI players are allowed to move within their zones, so validating their
+  // current mesh coordinates here creates false positional faults.
   const players=team==='home'?homePlayers:awayPlayers;
-  const eps=.75;
-  const expected={1:{x:2.2,z:-3.45},2:{x:2.2,z:-1.15},3:{x:-2.2,z:-1.15},4:{x:-5.8,z:-1.15},5:{x:-5.8,z:-3.45},6:{x:-2.2,z:-3.45}};
-  const sideSign=team==='home'?1:-1;
+  if(!players||players.length<6)return false;
+  const seen=new Set();
   for(const p of players){
-    const pos=p.userData.rotationPosition;if(!expected[pos])continue;
-    const target=expected[pos],z=target.z*sideSign;
-    if(Math.hypot(p.position.x-target.x,p.position.z-z)>eps)return false;
+    const pos=Number(p.userData.rotationPosition);
+    if(pos<1||pos>6||seen.has(pos))return false;
+    seen.add(pos);
   }
-  return true;
+  return seen.size===6;
 }
 function validateServiceOrder(){
-  const team=servingTeam,receivingTeam=team==='home'?'away':'home',players=team==='home'?homePlayers:awayPlayers,server=getServer(team);
-  if(!server||server.userData.rotationPosition!==1){point(team==='home'?'away':'home','SERVICE ORDER');return false}
-  if(!servicePositionValid(receivingTeam)){point(team==='home'?'away':'home','POSITIONAL FAULT');return false}
+  const team=servingTeam;
+  const receivingTeam=team==='home'?'away':'home';
+  const server=getServer(team);
+  // Only the server's rotation slot is authoritative here. Do not award a
+  // point merely because an AI defender has moved inside its legal zone.
+  if(!server||Number(server.userData.rotationPosition)!==1){
+    tip('SERVICE RESET • CORRECTING ROTATION');
+    applyRotationPositions(team,team==='home'?homePlayers:awayPlayers);
+    return false;
+  }
+  if(!servicePositionValid(receivingTeam)){
+    tip('POSITION RESET • CORRECTING ROTATION');
+    applyRotationPositions(receivingTeam,receivingTeam==='home'?homePlayers:awayPlayers);
+    return false;
+  }
   return true;
 }
 function resetPlayers(){window.VVReplay?.start?.({mode:localStorage.getItem('volleyverseMatchMode')||'real'});
