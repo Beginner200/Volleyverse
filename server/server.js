@@ -38,15 +38,17 @@ function action(s,p,a){
   }
   if(!s.rally.active||!rallyContact(s,p,a))return;
   const touches=s.rally.teamTouches[team]||0;
-  const enemyBall=team!==s.ball.lastTeam;
-  if(!enemyBall||touches>=3){if(touches>=3)point(s,enemy);return}
-  if(a==='set'&&p.position!=='SETTER'&&p.position!=='S')return;
+  const sameTeam=s.ball.lastTeam===team;
+  if(touches>=3){point(s,enemy,'FOUR_TOUCH');return}
+  if(s.rally.lastTouch===p.id&&sameTeam){point(s,enemy,'CONSECUTIVE_CONTACT');return}
+  if(a==='set'&&(p.position!=='SETTER'&&p.position!=='S')){point(s,enemy,'ILLEGAL_SET');return}
   if(a==='block'){
     if(Math.abs(s.ball.z)<.9&&s.ball.y>1.5&&s.ball.y<4.2){
       s.ball.vx=clamp((s.ball.x-p.x)*1.2,-3,3);s.ball.vz=team==='home'?-7:7;s.ball.vy=4.2;
-      s.rally.teamTouches[team]=0;s.rally.lastTouch=p.id;s.rally.lastTeam=team;s.ball.lastTeam=team;
+      s.rally.lastTouch=p.id;s.rally.lastTeam=team;s.ball.lastTeam=team;s.rally.teamTouches[team]=0;
     }return;
   }
+  if(a==='spike'&&Math.abs(s.ball.z)>2.2){point(s,enemy,'ILLEGAL_ATTACK');return}
   applyRallyHit(s,p,a);
 }
 function simulate(s){if(s.status!=='LIVE')return;s.tick++;const dt=.05;for(const p of s.players.values()){if(!p.connected){const absent=Date.now()-p.lastSeen;if(absent>0)p.aiTakeover=true;if(absent>s.abandonAfterMs&&!p.abandoned)applyAbandonPenalty(s,p)}const ai=p.aiTakeover,ix=ai?0:p.input.x,iz=ai?0:p.input.z;p.x=clamp(p.x+ix*4.2*dt,p.team==='home'?-4.5:.1,p.team==='home'?-0.1:4.5);p.z=clamp(p.z+iz*4.2*dt,-4.5,4.5);if(p.input.action){action(s,p,p.input.action);p.input.action=null}}if(s.rally.active){s.ball.vy-=9.8*dt;s.ball.x+=s.ball.vx*dt;s.ball.y+=s.ball.vy*dt;s.ball.z+=s.ball.vz*dt;if(s.ball.y<.1){point(s,s.ball.z>0?'home':'away','BALL_LANDED')}else if(Math.abs(s.ball.x)>4.7||Math.abs(s.ball.z)>4.7){point(s,s.ball.lastTeam==='home'?'away':'home','OUT_OF_BOUNDS')}else if(s.ball.y>8){point(s,s.ball.lastTeam==='home'?'away':'home','BALL_OUT')}if(Math.abs(s.ball.z)<.28&&s.ball.y<2.43&&s.ball.y>0.2&&Math.abs(s.ball.vz)>0.1){s.ball.z=s.ball.z<0?-0.29:0.29;s.ball.vz*=-0.92;s.ball.vx*=0.94;s.ball.lastTeam=s.ball.vz>0?'home':'away'}}s.lastActivity=Date.now();broadcast(s,{type:'SNAPSHOT',snapshot:{schema:'VV_MATCH_SNAPSHOT',version:3,tick:s.tick,timestamp:Date.now(),sessionId:s.id,state:{status:s.status,scores:s.scores,sets:s.sets,setNumber:s.setNumber,serving:s.serving,rotation:s.rotation,rally:s.rally,ball:s.ball,players:[...s.players.values()].map(p=>({id:p.id,team:p.team,slot:p.slot,rotation:p.rotation,position:p.position,characterId:p.characterId,connected:p.connected,aiTakeover:p.aiTakeover,lastAction:p.lastAction,x:p.x,y:p.y,z:p.z}))}}})}
