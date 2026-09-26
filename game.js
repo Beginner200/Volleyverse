@@ -390,15 +390,34 @@ function roleTarget(p,home,targetX,targetZ){
 }
 function moveAIPlayer(p,dt,targetX,targetZ,home){
   const t=roleTarget(p,home,targetX,targetZ);
-  // Defensive coverage now influences the actual movement target rather than only storing a hint.
+  // Keep the target stable between AI ticks, then smoothly accelerate toward it.
+  // This avoids stop-start/jittery movement when the ball or defensive target changes.
   const defending=ballState.active&&((home&&ballState.lastTouch==='away')||(!home&&ballState.lastTouch==='home'));
   const role=p.userData.position;
   const coverageRole=['L','LIBERO','OH','OPP'].includes(role);
-  if(defending&&coverageRole){t.x=THREE.MathUtils.clamp(t.x*.62+p.userData.coverageX*.38,-4.15,4.15)}
+  if(defending&&coverageRole){t.x=THREE.MathUtils.clamp(t.x*.62+(p.userData.coverageX??p.userData.baseX)*.38,-4.15,4.15)}
   p.userData.aiTargetX=t.x;p.userData.aiTargetZ=t.z;
-  const dx=t.x-p.position.x,dz=t.z-p.position.z,dist=Math.hypot(dx,dz);const profile=aiDifficultyProfile();const max=p.userData.speed*dt*(home ? .82 : 1.15)*profile.reaction;
-  if(dist>.04){const step=Math.min(dist,max);p.position.x+=dx/dist*step;p.position.z+=dz/dist*step;p.userData.moveX=dx/dist;p.userData.moveZ=dz/dist}else{p.userData.moveX=0;p.userData.moveZ=0}
-  p.position.x=THREE.MathUtils.clamp(p.position.x,-4.25,4.25);p.position.z=home?THREE.MathUtils.clamp(p.position.z,-4.35,-.25):THREE.MathUtils.clamp(p.position.z,.25,4.35);
+
+  const dx=t.x-p.position.x,dz=t.z-p.position.z,dist=Math.hypot(dx,dz);
+  const profile=aiDifficultyProfile();
+  const speed=(p.userData.speed||4.2)*(home?.92:1.05)*profile.reaction;
+  const desiredX=dist>.06?dx/dist:0,desiredZ=dist>.06?dz/dist:0;
+  const accel=dist>.5?10:14;
+  const smoothing=1-Math.exp(-accel*Math.max(dt,0));
+  p.userData.moveX=THREE.MathUtils.lerp(p.userData.moveX||0,desiredX,smoothing);
+  p.userData.moveZ=THREE.MathUtils.lerp(p.userData.moveZ||0,desiredZ,smoothing);
+
+  const moveMag=Math.hypot(p.userData.moveX,p.userData.moveZ);
+  if(moveMag>.01){
+    const step=Math.min(dist,speed*dt*moveMag);
+    p.position.x+=p.userData.moveX/moveMag*step;
+    p.position.z+=p.userData.moveZ/moveMag*step;
+  }else if(dist<.06){
+    p.userData.moveX=0;p.userData.moveZ=0;
+  }
+
+  p.position.x=THREE.MathUtils.clamp(p.position.x,-4.25,4.25);
+  p.position.z=home?THREE.MathUtils.clamp(p.position.z,-4.35,-.25):THREE.MathUtils.clamp(p.position.z,.25,4.35);
 }
 function chooseReceiver(players,ballX=ball.position.x){
   if(!players||!players.length)return null;
