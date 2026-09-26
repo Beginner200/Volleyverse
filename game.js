@@ -238,25 +238,14 @@ function validateServiceOrder(){
   return true;
 }
 function resetPlayers(){window.VVReplay?.start?.({mode:localStorage.getItem('volleyverseMatchMode')||'real'});
-  const roster=window.VVCharacters?.roster||[];
-  let saved=null;try{saved=JSON.parse(localStorage.getItem('volleyverseRoster')||'null')}catch(e){}
-  const homeIds=(Array.isArray(saved)&&saved.length===6?saved:['astra','kairo','nova','rex','mira','zen']);
-  const awayIds=['vex','luna','orion','kai','sora','axel'];
-  [...homePlayers,...awayPlayers].forEach((p,i)=>{
-    const id=i<6?homeIds[i]:awayIds[i-6],ch=roster.find(x=>x.id===id);
-    if(ch){
-      p.userData.characterId=ch.id;
-      p.userData.name=ch.name;
-      p.userData.position=ch.position;
-      p.userData.stats=matchStats(ch);
-      p.userData.characterStyle=ch.style||'';
-      p.userData.characterRarity=ch.rarity||'Common';
-      p.userData.speed=3.9+(p.userData.stats.speed||0)*.012;
-    }
-    p.userData.remoteControlled=false;p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX;
+  [...homePlayers,...awayPlayers].forEach(p=>{
+    p.userData.remoteControlled=false;
+    p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;
+    p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;
+    p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX;
+    p.visible=p.userData.playerState.active;
   });
-}
-function resetBall(){if(!ball||!controlled)return;clearTimeout(openingServeTimer);ballState.active=false;ballState.v.set(0,0,0);const server=getServer(servingTeam);ballState.lastTouch=servingTeam;ballState.cooldown=0;ballState.touches=0;ballState.lastAction='serve';ballState.side=servingTeam;ballState.targetX=server?.position.x||0;ballState.targetZ=servingTeam==='home'?-2.5:2.5;ballState.teamTouches={home:0,away:0};ballState.crossed=false;ballState.rallyPhase='SERVE';ballState.serveTeam=servingTeam;ball.position.set(server?.position.x||0,1.95,servingTeam==='home'?-4.15:4.15);rallyLocked=false;if(servingTeam==='home'){tip('READY • SERVE TO START THE RALLY');openingServeTimer=setTimeout(()=>{if(state.ready&&!paused&&!ballState.active&&!rallyLocked&&servingTeam==='home')serve()},650)}else{tip('RIVALS SERVING • RECEIVE THE BALL');openingServeTimer=setTimeout(()=>{if(state.ready&&!paused&&!ballState.active&&!rallyLocked&&servingTeam==='away')aiServe()},450)}setTimeout(()=>{if(state.ready&&!paused&&!rallyLocked&&!ballState.active){servingTeam==='home'?serve():aiServe()}},1400)}
+}function resetBall(){if(!ball||!controlled)return;clearTimeout(openingServeTimer);ballState.active=false;ballState.v.set(0,0,0);const server=getServer(servingTeam);ballState.lastTouch=servingTeam;ballState.cooldown=0;ballState.touches=0;ballState.lastAction='serve';ballState.side=servingTeam;ballState.targetX=server?.position.x||0;ballState.targetZ=servingTeam==='home'?-2.5:2.5;ballState.teamTouches={home:0,away:0};ballState.crossed=false;ballState.rallyPhase='SERVE';ballState.serveTeam=servingTeam;ball.position.set(server?.position.x||0,1.95,servingTeam==='home'?-4.15:4.15);rallyLocked=false;if(servingTeam==='home'){tip('READY • SERVE TO START THE RALLY');openingServeTimer=setTimeout(()=>{if(state.ready&&!paused&&!ballState.active&&!rallyLocked&&servingTeam==='home')serve()},650)}else{tip('RIVALS SERVING • RECEIVE THE BALL');openingServeTimer=setTimeout(()=>{if(state.ready&&!paused&&!ballState.active&&!rallyLocked&&servingTeam==='away')aiServe()},450)}setTimeout(()=>{if(state.ready&&!paused&&!rallyLocked&&!ballState.active){servingTeam==='home'?serve():aiServe()}},1400)}
 function aiServe(){if(!state.ready||servingTeam!=='away'||ballState.active||rallyLocked)return;if(!validateServiceOrder())return;const p=getServer('away');if(!p)return;const targetX=THREE.MathUtils.clamp((Math.random()-.5)*7.2,-3.6,3.6);ball.position.set(p.position.x,1.95,4.15);const dx=targetX-ball.position.x;ballState.v.set(THREE.MathUtils.clamp(dx*.22,-1.25,1.25),5.8,-7.2);ballState.active=true;ballState.lastTouch='away';ballState.side='away';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:0,away:1};ballState.rallyPhase='IN_PLAY';ballState.serveTeam='away';p.userData.action=.55;tip('RIVALS SERVE • RECEIVE THE BALL')}
 function serve(){if(!state.ready||ballState.active||rallyLocked||servingTeam!=='home')return;if(!validateServiceOrder())return;const server=getServer('home');if(!server)return;ball.position.set(server.position.x,1.95,-4.15);ballState.v.set(THREE.MathUtils.clamp(server.position.x*.06,-.65,.65),5.8,7.2);ballState.active=true;ballState.lastTouch='home';ballState.side='home';ballState.touches=1;ballState.lastAction='serve';ballState.teamTouches={home:1,away:0};ballState.rallyPhase='IN_PLAY';ballState.serveTeam='home';controlled.userData.action=.55;tip('SERVE IN PLAY • MOVE INTO POSITION')}
 function skillWindow(type){return {pass:[.72,2.65],set:[1.35,3.35],spike:[2.05,4.25],block:[1.25,3.25],dive:[.18,1.35],serve:[1.5,2.25]}[type]||[.2,4.5]}
