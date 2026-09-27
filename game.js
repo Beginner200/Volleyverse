@@ -469,7 +469,7 @@ function roleTarget(p,home,targetX,targetZ){
       // Outside hitter: left-side attacking lane and wider defensive coverage.
       tx=THREE.MathUtils.clamp(baseX+(dangerX-baseX)*.42,-4.1,4.1);
       tz=home?-2.35:2.35;
-      if(attacking&&dangerZ<-.9===home)tz=home?-0.52:0.52;
+      if(attacking&&(home?dangerZ<-.9:dangerZ>.9))tz=home?-0.52:0.52;
     }else if(role==='OPP'){
       // Opposite: right-side attacking lane and block coverage opposite the setter.
       tx=THREE.MathUtils.clamp(baseX+(dangerX-baseX)*.34,-4.1,4.1);
