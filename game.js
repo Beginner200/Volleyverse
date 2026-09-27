@@ -277,6 +277,7 @@ function resetPlayers(){window.VVReplay?.start?.({mode:localStorage.getItem('vol
     p.userData.remoteControlled=false;
     p.position.x=p.userData.baseX;p.position.z=p.userData.baseZ;p.position.y=0;
     p.userData.action=0;p.userData.cooldown=0;p.userData.moveX=0;p.userData.moveZ=0;
+    p.userData.blockTargetX=undefined;
     p.userData.aiTargetX=p.userData.baseX;p.userData.aiTargetZ=p.userData.baseZ;p.userData.coverageX=p.userData.baseX;
     p.visible=p.userData.playerState.active;
   });
@@ -493,6 +494,13 @@ function roleTarget(p,home,targetX,targetZ){
 }
 function moveAIPlayer(p,dt,targetX,targetZ,home){
   const t=roleTarget(p,home,targetX,targetZ);
+  // During a blocking window, temporarily prioritize the coordinated block
+  // target created by aiBlock(). The role formation resumes automatically
+  // after the action expires.
+  if(ballState.active&&p.userData.blockTargetX!==undefined&&p.userData.action>.2){
+    t.x=THREE.MathUtils.clamp(Number(p.userData.blockTargetX)||t.x,-4.15,4.15);
+    t.z=home?-.48:.48;
+  }
   // Keep the target stable between AI ticks, then smoothly accelerate toward it.
   // This avoids stop-start/jittery movement when the ball or defensive target changes.
   const defending=ballState.active&&((home&&ballState.lastTouch==='away')||(!home&&ballState.lastTouch==='home'));
