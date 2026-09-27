@@ -682,22 +682,64 @@ function aiCoverage(){
   });
 }
 function aiBlock(){
-  const profile=aiDifficultyProfile();if(!ballState.active||ballState.cooldown>0||ball.position.y<1.55)return false;
-  const attackingHome=ballState.lastTouch==='home'&&ball.position.z>-1.15;const attackingAway=ballState.lastTouch==='away'&&ball.position.z<1.15;if(!attackingHome&&!attackingAway)return false;
-  const defenders=attackingHome?awayPlayers:homePlayers.filter(p=>p!==controlled);const blockers=defenders.filter(p=>['MB','OPP','OH'].includes(p.userData.position));if(!blockers.length)return false;
-  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.22,-4.15,4.15);
-  const primary=blockers.reduce((a,p)=>Math.abs(p.position.x-predictedX)<Math.abs(a.position.x-predictedX)?p:a,blockers[0]);
-  if(Math.abs(primary.position.x-predictedX)>1.45||Math.random()>profile.block)return false;
-  primary.position.x=predictedX;primary.userData.action=.8;
-  const partners=blockers.filter(p=>p!==primary&&Math.abs(p.position.x-predictedX)<3.4).sort((a,b)=>Math.abs(a.position.x-predictedX)-Math.abs(b.position.x-predictedX));
-  const useDouble=partners.length&&Math.random()<(0.35+profile.block*.5);
-  if(useDouble){const partner=partners[0];const side=predictedX>=0?-1:1;partner.position.x=THREE.MathUtils.clamp(predictedX+side*.95,-4.15,4.15);partner.userData.action=.72}
-  const useTriple=useDouble&&partners.length>1&&profile.block>.78&&Math.random()<.28;
-  if(useTriple){const third=partners[1];third.position.x=THREE.MathUtils.clamp(predictedX+(predictedX>=0?1.05:-1.05),-4.15,4.15);third.userData.action=.62}
-  // Block angle: a coordinated wall sends the ball back toward the attacking side with a controlled lift.
-  ballState.v.x+=(predictedX-ball.position.x)*.18;ballState.v.z*=-(.58+(useDouble ? .1 : 0)+(useTriple ? .06 : 0));ballState.v.y=Math.max(3.2,ballState.v.y*(useDouble ? .42 : .35));
+  const profile=aiDifficultyProfile();
+  if(!ballState.active||ballState.cooldown>0||ball.position.y<1.55)return false;
+  const attackingHome=ballState.lastTouch==='home'&&ball.position.z>-1.15;
+  const attackingAway=ballState.lastTouch==='away'&&ball.position.z<1.15;
+  if(!attackingHome&&!attackingAway)return false;
+
+  const defenders=attackingHome?awayPlayers:homePlayers.filter(p=>p!==controlled);
+  const blockers=defenders.filter(p=>['MB','OPP','OH'].includes(p.userData.position));
+  if(!blockers.length)return false;
+
+  const predictedX=THREE.MathUtils.clamp(ball.position.x+ballState.v.x*.24,-4.15,4.15);
+  const middle=blockers.filter(p=>p.userData.position==='MB');
+  const primaryPool=middle.length?middle:blockers;
+  const primary=primaryPool.reduce((best,p)=>
+    Math.abs(p.position.x-predictedX)<Math.abs(best.position.x-predictedX)?p:best,
+    primaryPool[0]
+  );
+
+  // A blocker must actually be close to the net and the attack lane.
+  const laneDistance=Math.abs(primary.position.x-predictedX);
+  const netDistance=Math.abs(Math.abs(primary.position.z)-.5);
+  const readRange=1.15+profile.reaction*.35;
+  if(laneDistance>readRange||netDistance>1.15||Math.random()>profile.block)return false;
+
+  primary.userData.blockTargetX=predictedX;
+  primary.userData.action=.82;
+
+  const partners=blockers
+    .filter(p=>p!==primary)
+    .sort((a,b)=>Math.abs(a.position.x-predictedX)-Math.abs(b.position.x-predictedX));
+
+  const doubleChance=.28+profile.block*.55;
+  const useDouble=partners.length>0&&Math.random()<doubleChance;
+  if(useDouble){
+    const partner=partners[0];
+    const side=partner.position.x>=predictedX?1:-1;
+    partner.userData.blockTargetX=THREE.MathUtils.clamp(predictedX+side*.72,-4.05,4.05);
+    partner.userData.action=.76;
+  }
+
+  const useTriple=useDouble&&partners.length>1&&profile.block>.8&&Math.random()<.24;
+  if(useTriple){
+    const third=partners[1];
+    const side=third.position.x>=predictedX?1:-1;
+    third.userData.blockTargetX=THREE.MathUtils.clamp(predictedX+side*1.25,-4.05,4.05);
+    third.userData.action=.68;
+  }
+
+  // Redirect only when the wall is formed; stronger walls create a lower,
+  // more controlled rebound.
+  const wallStrength=useTriple?.78:useDouble?.7:.62;
+  ballState.v.x+=(predictedX-ball.position.x)*.2;
+  ballState.v.z*=-wallStrength;
+  ballState.v.y=Math.max(3.15,ballState.v.y*(useTriple?.36:useDouble?.42:.48));
+
   registerBallContact(attackingHome?'away':'home','block',{countTouch:false,cooldown:.5});
-  tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');return true;
+  tip((useTriple?'TRIPLE BLOCK!':useDouble?'DOUBLE BLOCK!':'BLOCK!')+' • '+(attackingHome?'RIVALS':'YOUR TEAM')+' WALL');
+  return true;
 }
 function aiRallyDecision(team,players){
   const touches=ballState.teamTouches[team];
@@ -706,16 +748,32 @@ function aiRallyDecision(team,players){
   const attacker=chooseAttackTarget(players,ball.position.x);
   const pressure=Math.abs(ball.position.x-attacker.position.x);
   const profile=aiDifficultyProfile();
+
   if(touches===0)return {kind:'receive',player:chooseReceiver(players,ball.position.x)};
+
   if(touches===1){
-    const defenders=team==='home'?awayPlayers:homePlayers;const target=chooseSetterTarget(players,defenders);
+    const defenders=team==='home'?awayPlayers:homePlayers;
+    const target=chooseSetterTarget(players,defenders);
+    setter.userData.aiTargetX=THREE.MathUtils.clamp(ball.position.x*.28,-2.8,2.8);
+    setter.userData.aiTargetZ=team==='home'?-2.15:2.15;
     return {kind:'set',player:target};
   }
+
   if(touches===2){
-    // Under pressure, favor the safest available attacker; with better AI, vary the attack point.
-    const safe=attackers.filter(p=>Math.abs(p.position.x-ball.position.x)<3.6);
+    // The attack choice considers role, pressure and blocker spacing.
+    const opponents=team==='home'?awayPlayers:homePlayers;
+    const safe=attackers.filter(p=>{
+      const nearestBlock=opponents.filter(b=>['MB','OH','OPP'].includes(b.userData.position))
+        .reduce((d,b)=>Math.min(d,Math.abs(p.position.x-b.position.x)),99);
+      return Math.abs(p.position.x-ball.position.x)<3.8&&nearestBlock>.75;
+    });
     const pool=safe.length?safe:attackers;
-    const player=profile.accuracy>.9&&pool.length?pool[Math.floor(Math.random()*pool.length)]:attacker;
+    let player=attacker;
+    if(pool.length){
+      player=profile.accuracy>.88
+        ?pool[Math.floor(Math.random()*pool.length)]
+        :pool.reduce((best,p)=>Math.abs(p.position.x-ball.position.x)<Math.abs(best.position.x-ball.position.x)?p:best,pool[0]);
+    }
     return {kind:'attack',player,pressure};
   }
   return {kind:'reset',player:setter};
