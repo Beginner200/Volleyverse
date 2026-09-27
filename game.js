@@ -437,15 +437,52 @@ function roleTarget(p,home,targetX,targetZ){
     : THREE.MathUtils.clamp(targetZ+(ballState.v?.z||0)*lead,.25,4.2);
   const dangerX=predictedX;
   const dangerZ=predictedZ;
-  if(!ballState.active){tx=baseX+Math.sin(performance.now()*.001+p.userData.phase)*.18;tz=baseZ+Math.sin(performance.now()*.0012+p.userData.phase)*.08}
-  else{
+  if(!ballState.active){
+    // Before the rally, keep the server fixed at the service zone while the
+    // rest of the team settles into its rotational formation.
+    if(Number(p.userData.rotationPosition)===1){
+      tx=home?-3.75:3.75;tz=home?-4.02:4.02;
+    }else{
+      tx=baseX+Math.sin(performance.now()*.001+p.userData.phase)*.12;
+      tz=baseZ+Math.sin(performance.now()*.0012+p.userData.phase)*.05;
+    }
+  }else{
     const towardX=THREE.MathUtils.clamp((dangerX-baseX)*.34,-1.7,1.7);
-    if(role==='S'||role==='SETTER'){tx=THREE.MathUtils.clamp(dangerX*.24,-3.0,3.0);tz=home?-2.55:2.55}
-    else if(role==='MB'){tx=THREE.MathUtils.clamp(dangerX*.62,-4.0,4.0);tz=home?-1.0:1.0;if((home&&targetZ>-.9)||(!home&&targetZ<.9))tz=home?-.55:.55}
-    else if(role==='L'||role==='LIBERO'){tx=THREE.MathUtils.clamp(dangerX*.82,-4.1,4.1);tz=home?-3.55:3.55}
-    else{tx=baseX+towardX;tz=home?-2.55:2.55}
+    const attacking=ballState.lastTouch===(home?'home':'away');
+    if(role==='S'||role==='SETTER'){
+      // Setter: stay available in the setting window rather than chasing the
+      // first ball, then move toward the net after the receive.
+      tx=THREE.MathUtils.clamp(dangerX*.24,-3.0,3.0);
+      tz=home?-2.55:2.55;
+    }else if(role==='MB'){
+      // Middle blocker: own the middle of the net and close toward the
+      // predicted attack lane when defending.
+      tx=THREE.MathUtils.clamp(dangerX*.62,-4.0,4.0);
+      tz=home?-1.0:1.0;
+      if((home&&targetZ>-.9)||(!home&&targetZ<.9))tz=home?-.55:.55;
+    }else if(role==='L'||role==='LIBERO'){
+      // Libero: stay deepest and prioritize the predicted back-court landing
+      // point, especially against hard attacks.
+      tx=THREE.MathUtils.clamp(dangerX*.82,-4.1,4.1);
+      tz=home?-3.55:3.55;
+    }else if(role==='OH'){
+      // Outside hitter: left-side attacking lane and wider defensive coverage.
+      tx=THREE.MathUtils.clamp(baseX+(dangerX-baseX)*.42,-4.1,4.1);
+      tz=home?-2.35:2.35;
+      if(attacking&&dangerZ<-.9===home)tz=home?-0.52:0.52;
+    }else if(role==='OPP'){
+      // Opposite: right-side attacking lane and block coverage opposite the setter.
+      tx=THREE.MathUtils.clamp(baseX+(dangerX-baseX)*.34,-4.1,4.1);
+      tz=home?-2.15:2.15;
+      if(attacking&&dangerZ<-.9===home)tz=home?-0.52:0.52;
+    }else{
+      tx=baseX+towardX;tz=home?-2.55:2.55;
+    }
     const danger=home?dangerZ<-.9:dangerZ>.9;
-    if(danger){tx+=THREE.MathUtils.clamp((dangerX-tx)*.28,-1.35,1.35);tz=home?Math.max(-4.2,tz-.28):Math.min(4.2,tz+.28)}
+    if(danger){
+      tx+=THREE.MathUtils.clamp((dangerX-tx)*.28,-1.35,1.35);
+      tz=home?Math.max(-4.2,tz-.28):Math.min(4.2,tz+.28);
+    }
     if(role==='S'||role==='SETTER')tz=home?Math.min(tz,-1.45):Math.max(tz,1.45);
     if(role==='L'||role==='LIBERO')tz=home?Math.min(tz,-2.65):Math.max(tz,2.65);
 
