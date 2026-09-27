@@ -404,10 +404,10 @@ function attackDefenseTransitionTarget(p,home,tx,tz){
     // After the first touch, the setter moves toward the play while attackers
     // begin their approach without all six players collapsing on the ball.
     if(setter){
-      tx=THREE.MathUtils.clamp(targetX*.32,-2.8,2.8);
+      tx=THREE.MathUtils.clamp(tx*.32,-2.8,2.8);
       tz=home?-2.15:2.15;
     }else if(frontRow){
-      const approachSide=role==='MB'?targetX*.48:targetX*.78;
+      const approachSide=role==='MB'?tx*.48:tx*.78;
       tx=THREE.MathUtils.clamp(p.userData.baseX+(approachSide-p.userData.baseX)*.35,-4.1,4.1);
       tz=home?-0.72:0.72;
     }
@@ -415,7 +415,7 @@ function attackDefenseTransitionTarget(p,home,tx,tz){
     // During the attack, the chosen attacker approaches while the others
     // prepare for coverage/recovery.
     if(frontRow){
-      tx=THREE.MathUtils.clamp(targetX*.72,-4.0,4.0);
+      tx=THREE.MathUtils.clamp(tx*.72,-4.0,4.0);
       tz=home?-0.48:0.48;
     }else if(setter){
       tz=home?-2.05:2.05;
